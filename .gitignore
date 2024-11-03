@@ -1,0 +1,69 @@
+# General .NET
+*.user
+*.suo
+*.sln.docstates
+.vscode/
+.vs/
+.idea/
+
+# Build Folders
+bin/
+obj/
+out/
+
+# ASP.NET
+appsettings.*.json
+appsettings.json
+secrets.json
+
+# Entity Framework
+**/Migrations/
+
+# dotnet user secrets
+**/secrets.json
+*.secret.*
+
+# Rider
+.idea/
+.idea_modules/
+*.sln.iml
+
+# Visual Studio Code
+.vscode/
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# Rider files
+.idea/
+*.sln.iml
+
+# Logs
+*.log
+
+# NPM packages and node_modules
+node_modules/
+dist/
+package-lock.json
+yarn.lock
+
+# Temporary files
+*.tmp
+*.temp
+*.pid
+*.rspec
+*.orig
+*.rej
+
+# macOS files
+.DS_Store
+
+# Windows files
+Thumbs.db
+desktop.ini
+
+# Generated files by NuGet
+project.lock.json
+project.fragment.lock.json
+artifacts/
