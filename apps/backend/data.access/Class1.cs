@@ -1,6 +1,7 @@
-﻿namespace data.access;
-
-public class Class1
+﻿namespace LingoLogger.Data.Access
 {
+    public class DbContext : Microsoft.EntityFrameworkCore.DbContext
+    {
 
+    }
 }

@@ -2,7 +2,6 @@
 *.user
 *.suo
 *.sln.docstates
-.vscode/
 .vs/
 .idea/
 
@@ -27,13 +26,6 @@ secrets.json
 .idea/
 .idea_modules/
 *.sln.iml
-
-# Visual Studio Code
-.vscode/
-.vscode/settings.json
-.vscode/tasks.json
-.vscode/launch.json
-.vscode/extensions.json
 
 # Rider files
 .idea/

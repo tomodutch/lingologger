@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "build:webapi",
+        "command": "dotnet",
+        "type": "process",
+        "args": ["build", "apps/backend/web.api"],
+        "problemMatcher": "$msCompile",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "build:bot",
+        "command": "dotnet",
+        "type": "process",
+        "args": ["build", "apps/backend/discord.bot"],
+        "problemMatcher": "$msCompile"
+      }
+    ]
+  }
+  
