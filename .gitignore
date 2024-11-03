@@ -11,12 +11,9 @@ obj/
 out/
 
 # ASP.NET
-appsettings.*.json
-appsettings.json
+# appsettings.*.json
+# appsettings.json
 secrets.json
-
-# Entity Framework
-**/Migrations/
 
 # dotnet user secrets
 **/secrets.json
