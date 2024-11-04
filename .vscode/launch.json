@@ -8,6 +8,7 @@
         "program": "${workspaceFolder}/apps/backend/web.api/bin/Debug/net8.0/web.api.dll",
         "args": [],
         "cwd": "${workspaceFolder}/apps/backend/web.api",
+        "preLaunchTask": "build:webapi",
         "stopAtEntry": false,
         "serverReadyAction": {
           "action": "openExternally",
@@ -23,6 +24,7 @@
       {
         "name": "Discord Bot",
         "type": "coreclr",
+        "preLaunchTask": "build:bot",
         "request": "launch",
         "program": "${workspaceFolder}/apps/backend/discord.bot/bin/Debug/net8.0/discord.bot.dll",
         "args": [],
