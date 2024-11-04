@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using LingoLogger.Data.Access;
+using Microsoft.EntityFrameworkCore;
 
 namespace LingoLogger.Discord.Bot;
 
@@ -36,6 +38,10 @@ public class Program
 
     private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
     {
+        var connectionString = context.Configuration.GetConnectionString("DbConnection");
+
+        services.AddDbContext<LingoLoggerDbContext>(options =>
+            options.UseNpgsql(connectionString));
         services.AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x =>
                 {

@@ -3,6 +3,12 @@
   <ItemGroup>
     <ProjectReference Include="..\data.access\data.access.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
