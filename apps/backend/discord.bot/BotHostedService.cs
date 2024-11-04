@@ -78,7 +78,6 @@ public class BotHostedService : IHostedService
     private async Task HandleInteraction(SocketInteraction interaction)
     {
         var context = new SocketInteractionContext(_client, interaction);
-        await _interactionService.ExecuteCommandAsync(context, _serviceProvider).ConfigureAwait(false);
         try
         {
             await _interactionService.ExecuteCommandAsync(context, _serviceProvider).ConfigureAwait(false);

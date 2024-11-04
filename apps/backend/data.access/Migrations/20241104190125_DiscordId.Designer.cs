@@ -3,6 +3,7 @@ using System;
 using LingoLogger.Data.Access;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace data.access.Migrations
 {
     [DbContext(typeof(LingoLoggerDbContext))]
-    partial class LingoLoggerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241104190125_DiscordId")]
+    partial class DiscordId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,8 +43,10 @@ namespace data.access.Migrations
                         .HasMaxLength(86400)
                         .HasColumnType("double precision");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamptz");
+                    b.Property<DateTimeOffset>("DeletedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamptz")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 
                     b.Property<string>("LogType")
                         .IsRequired()
@@ -81,11 +86,9 @@ namespace data.access.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamptz")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
+                    b.Property<DateTimeOffset>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal?>("DiscordId")
@@ -109,7 +112,7 @@ namespace data.access.Migrations
                 {
                     b.HasBaseType("LingoLogger.Data.Models.Log");
 
-                    b.Property<int?>("CharactersRead")
+                    b.Property<int>("CharactersRead")
                         .HasColumnType("integer");
 
                     b.HasDiscriminator().HasValue("Readable");

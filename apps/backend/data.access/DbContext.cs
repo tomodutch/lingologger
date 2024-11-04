@@ -33,9 +33,8 @@ namespace LingoLogger.Data.Access
                       .HasColumnType("timestamptz")
                       .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
                 log.Property(l => l.DeletedAt)
-                      .IsRequired()
-                      .HasColumnType("timestamptz")
-                      .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+                      .IsRequired(false)
+                      .HasColumnType("timestamptz");
                 log.HasOne(l => l.User)
                     .WithMany(u => u.Logs)
                     .HasForeignKey(l => l.UserId)
@@ -44,21 +43,28 @@ namespace LingoLogger.Data.Access
             });
 
             // Configure User entity
-            modelBuilder.Entity<User>(entity =>
+            modelBuilder.Entity<User>(user =>
             {
                 // Primary Key
-                entity.HasKey(u => u.Id);
+                user.HasKey(u => u.Id);
 
                 // Properties
-                entity.Property(u => u.Id)
+                user.Property(u => u.Id)
                       .IsRequired()
                       .ValueGeneratedOnAdd(); // GUID generated on add
 
+                user.Property(u => u.DiscordId).IsRequired(false);
+                user.HasIndex(u => u.DiscordId);
+
                 // Relationships
-                entity.HasMany(u => u.Logs)
+                user.HasMany(u => u.Logs)
                       .WithOne(l => l.User)
                       .HasForeignKey(l => l.UserId)
                       .OnDelete(DeleteBehavior.Cascade); // Cascade delete if a user is deleted
+                user.Property(l => l.CreatedAt)
+                      .IsRequired()
+                      .HasColumnType("timestamptz")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
             });
         }
     }
