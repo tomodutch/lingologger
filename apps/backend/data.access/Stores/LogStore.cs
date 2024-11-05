@@ -241,4 +241,52 @@ public class LogStore : ILogStore
 
         return user;
     }
+
+    public async Task<ApiProfile> GetProfileAsync(ulong discordId)
+    {
+        var today = DateTimeOffset.UtcNow;
+        var logs = await _dbContext.Logs.Where(l => l.User.DiscordId == discordId)
+            .Where(l => l.CreatedAt.UtcDateTime.Year == today.Year && l.CreatedAt.UtcDateTime.DayOfYear == today.DayOfYear)
+            .ToListAsync();
+
+        var profile = new ApiProfile()
+        {
+            ReadTimeFormatted = "0s",
+            ReadTimeInSeconds = 0,
+            ListenTimeFormatted = "0s",
+            ListenTimeInSeconds = 0,
+            WatchTimeFormatted = "0s",
+            WatchTimeInSeconds = 0,
+            EpisodesWatched = 0
+        };
+
+        foreach (var log in logs)
+        {
+            switch (log)
+            {
+                case ReadableLog readableLog:
+                    profile.ReadTimeInSeconds += readableLog.AmountOfSeconds;
+                    break;
+                case AudibleLog audibleLog:
+                    profile.ListenTimeInSeconds += audibleLog.AmountOfSeconds;
+                    break;
+                case WatchableLog watchableLog:
+                    profile.WatchTimeInSeconds += watchableLog.AmountOfSeconds;
+                    break;
+                case EpisodicLog episodicLog:
+                    profile.WatchTimeInSeconds += episodicLog.AmountOfSeconds;
+                    profile.EpisodesWatched += episodicLog.Episodes;
+                    break;
+                default:
+                    _logger.LogWarning($"{log.GetType()}: not supported in profile.");
+                    break;
+            }
+        }
+
+        profile.ReadTimeFormatted = _timeParser.SecondsToTimeFormat(profile.ReadTimeInSeconds);
+        profile.ListenTimeFormatted = _timeParser.SecondsToTimeFormat(profile.ListenTimeInSeconds);
+        profile.WatchTimeFormatted = _timeParser.SecondsToTimeFormat(profile.WatchTimeInSeconds);
+
+        return profile;
+    }
 }

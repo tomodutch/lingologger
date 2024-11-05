@@ -22,7 +22,13 @@ public class TimeParser
         if (remainingSeconds > 0)
             sb.Append($"{remainingSeconds}s");
 
-        return sb.ToString(); ;
+
+        if (sb.Length == 0)
+        {
+            return "0s";
+        }
+
+        return sb.ToString();
     }
 
     public int ParseTimeToSeconds(string timeStr)
