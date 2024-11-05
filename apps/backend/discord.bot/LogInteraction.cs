@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using Discord;
 using Discord.Interactions;
-using LingoLogger.Data.Models;
 using LingoLogger.Data.Models.Stores;
 using LingoLogger.Web.Models;
 using Microsoft.Extensions.Logging;
@@ -35,82 +34,106 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("characters", "Total number of characters read.")] int? characters = null)
     {
         await DeferAsync();
-        _logger.LogInformation($"Incoming readable {DateTimeOffset.UtcNow}");
-        var log = new ApiReadableLog()
-        {
-            Medium = medium,
-            Title = title,
-            CharactersRead = characters,
-            Time = time,
-            Source = "Discord"
-        };
-        await _logStore.SaveLogAsync(log, new()
-        {
-            Source = SaveLogSource.Discord,
-            DiscordId = Context.User.Id
-        });
-        var description = $"Title: {title}\nTime: {time}\nCharacters: {(characters.HasValue ? characters.Value.ToString() : "N/A")}\nNotes: {notes ?? "No notes provided."}";
         try
         {
-        await FollowupAsync("logged", embed: BuildCreatedLogEmbed(description));
-        } catch(Exception ex) {
-        _logger.LogError($"{ex.Message}", ex);
+            _logger.LogInformation($"Incoming readable {DateTimeOffset.UtcNow}");
+            var log = new ApiReadableLog()
+            {
+                Medium = medium,
+                Title = title,
+                CharactersRead = characters,
+                Time = time,
+                Source = "Discord"
+            };
+            await _logStore.SaveLogAsync(log, new()
+            {
+                Source = SaveLogSource.Discord,
+                DiscordId = Context.User.Id
+            });
+            var description = $"Title: {title}\nTime: {time}\nCharacters: {(characters.HasValue ? characters.Value.ToString() : "N/A")}\nNotes: {notes ?? "No notes provided."}";
+            await FollowupAsync("logged", embed: BuildCreatedLogEmbed(description));
+            _logger.LogInformation($"Send response {DateTimeOffset.UtcNow}");
         }
-        _logger.LogInformation($"Send response {DateTimeOffset.UtcNow}");
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed logging readable: {ex.Message}", ex);
+            await FollowupAsync("An error occurred while logging. Try again later");
+        }
     }
 
     [SlashCommand("episodes", "Log a watching activity.")]
     public async Task LogEpisodes(
-        [Summary("media", "Type of medium being watched (e.g., YouTube, anime).")] string medium,
+        [Choice("Anime", "anime")]
+        [Choice("Drama", "drama")]
+        [Choice("Other", "other")]
+        [Summary("media", "Type of medium being watched (e.g., Anime, drama).")] string medium,
         [Summary("title", "Title of the video or show.")] string title,
         [Summary("episodes", "Number of episodes watched.")] int episodes,
         [Summary("episode_length", "Length of each episode")] string episodeLength)
     {
         await DeferAsync();
-        var log = new ApiEpisodicLog()
+        try
         {
-            Medium = medium,
-            Title = title,
-            Time = "",
-            Source = "Discord",
-            EpisodeLength = episodeLength,
-            AmountOfEpisodes = episodes
-        };
-        await _logStore.SaveLogAsync(log, new()
-        {
-            Source = SaveLogSource.Discord,
-            DiscordId = Context.User.Id
-        });
+            var log = new ApiEpisodicLog()
+            {
+                Medium = medium,
+                Title = title,
+                Time = "",
+                Source = "Discord",
+                EpisodeLength = episodeLength,
+                AmountOfEpisodes = episodes
+            };
+            await _logStore.SaveLogAsync(log, new()
+            {
+                Source = SaveLogSource.Discord,
+                DiscordId = Context.User.Id
+            });
 
-        var description = "Watchable logged";
-        await RespondAsync(embed: BuildCreatedLogEmbed(description));
+            var description = "Watchable logged";
+            await FollowupAsync(embed: BuildCreatedLogEmbed(description));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed logging episodic: {ex.Message}", ex);
+            await FollowupAsync("An error occurred while logging. Try again later");
+        }
     }
 
     // Subcommand for logging watching
     [SlashCommand("watched", "Log a watching activity.")]
     public async Task LogWatching(
-        [Summary("media", "Type of medium being watched (e.g., YouTube, anime).")] string medium,
+        [Choice("Youtube", "youtube")]
+        [Choice("Anime", "anime")]
+        [Choice("Drama", "drama")]
+        [Choice("Other", "other")]
+        [Summary("media", "Type of medium being watched (e.g., YouTube, anime, drama, other).")] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
-        [Summary("title", "Title of the video or show.")] string title,
-        [Summary("episodes", "Number of episodes watched.")] int? episodes = null,
-        [Summary("episode_length", "Length of each episode")] string? episodeLength = null)
+        [Summary("title", "Title of the video or show.")] string title)
     {
         await DeferAsync();
-        var log = new ApiWatchableLog()
+        try
         {
-            Medium = medium,
-            Title = title,
-            Time = time,
-            Source = "Discord"
-        };
-        await _logStore.SaveLogAsync(log, new()
-        {
-            Source = SaveLogSource.Discord,
-            DiscordId = Context.User.Id
-        });
+            var log = new ApiWatchableLog()
+            {
+                Medium = medium,
+                Title = title,
+                Time = time,
+                Source = "Discord"
+            };
+            await _logStore.SaveLogAsync(log, new()
+            {
+                Source = SaveLogSource.Discord,
+                DiscordId = Context.User.Id
+            });
 
-        var description = "Watchable logged";
-        await RespondAsync(embed: BuildCreatedLogEmbed(description));
+            var description = "Watchable logged";
+            await FollowupAsync(embed: BuildCreatedLogEmbed(description));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed logging watchable: {ex.Message}", ex);
+            await FollowupAsync("An error occurred while logging. Try again later");
+        }
     }
 
     // Subcommand for logging listening
@@ -121,25 +144,34 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("title", "Title of the audio.")] string title)
     {
         await DeferAsync();
-        var log = new ApiAudibleLog()
+        try
         {
-            Medium = medium,
-            Title = title,
-            Time = time,
-            Source = "Discord"
-        };
+            var log = new ApiAudibleLog()
+            {
+                Medium = medium,
+                Title = title,
+                Time = time,
+                Source = "Discord"
+            };
 
-        await _logStore.SaveLogAsync(log, new()
+            await _logStore.SaveLogAsync(log, new()
+            {
+                Source = SaveLogSource.Discord,
+                DiscordId = Context.User.Id
+            });
+
+            var description = "Listening logged";
+            await FollowupAsync(embed: BuildCreatedLogEmbed(description));
+        }
+        catch (Exception ex)
         {
-            Source = SaveLogSource.Discord,
-            DiscordId = Context.User.Id
-        });
-
-        var description = "Listening logged";
-        await RespondAsync(embed: BuildCreatedLogEmbed(description));
+            _logger.LogError($"Failed logging audible: {ex.Message}", ex);
+            await FollowupAsync("An error occurred while logging. Try again later");
+        }
     }
 
-    private Embed BuildCreatedLogEmbed(string description) {
+    private Embed BuildCreatedLogEmbed(string description)
+    {
         var embed = new EmbedBuilder()
             .WithTitle("Created log")
             .WithDescription(description)
