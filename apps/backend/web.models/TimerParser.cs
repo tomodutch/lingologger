@@ -1,9 +1,30 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LingoLogger.Web.Models;
 
 public class TimeParser
 {
+    public string SecondsToTimeFormat(int seconds)
+    {
+        // Calculate hours, minutes, and remaining seconds
+        int hours = seconds / 3600;
+        int minutes = seconds % 3600 / 60;
+        int remainingSeconds = seconds % 60;
+
+        // Build the formatted string
+        var sb = new StringBuilder();
+
+        if (hours > 0)
+            sb.Append($"{hours}h");
+        if (minutes > 0)
+            sb.Append($"{minutes}m");
+        if (remainingSeconds > 0)
+            sb.Append($"{remainingSeconds}s");
+
+        return sb.ToString(); ;
+    }
+
     public int ParseTimeToSeconds(string timeStr)
     {
         // Regular expression to match the time format

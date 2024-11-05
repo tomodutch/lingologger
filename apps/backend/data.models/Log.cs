@@ -28,6 +28,6 @@ public class WatchableLog : Log
 
 public class EpisodicLog : Log
 {
-    public int? Episodes { get; set; }
-    public int? EpisodeLengthInSeconds { get; set; }
+    public int Episodes { get; set; }
+    public int EpisodeLengthInSeconds { get; set; }
 }

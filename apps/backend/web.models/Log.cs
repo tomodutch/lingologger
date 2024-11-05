@@ -6,6 +6,7 @@ public class ApiLog
     public required string Medium { get; set; }
     public required string Time { get; set; }
     public required string Source { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
 }
 

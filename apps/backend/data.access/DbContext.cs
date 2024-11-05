@@ -11,17 +11,16 @@ namespace LingoLogger.Data.Access
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<Log>()
-                .HasDiscriminator<string>("LogType")
-                .HasValue<ReadableLog>("Readable")
-                .HasValue<AudibleLog>("Audible")
-                .HasValue<WatchableLog>("Watchable")
-                .HasValue<EpisodicLog>("Episodic");
-
             modelBuilder.Entity<Log>(log =>
             {
-                log.HasKey(l => new {l.UserId, l.CreatedAt});
+                log.HasDiscriminator<string>("LogType")
+                    .HasValue<ReadableLog>("Readable")
+                    .HasValue<AudibleLog>("Audible")
+                    .HasValue<WatchableLog>("Watchable")
+                    .HasValue<EpisodicLog>("Episodic");
+
+                log.HasQueryFilter(log => log.DeletedAt == null);
+                log.HasKey(l => new { l.UserId, l.CreatedAt });
                 log.HasIndex(l => l.UserId);
                 log.Property(l => l.UserId).IsRequired();
                 log.Property(l => l.Title).IsRequired().HasMaxLength(100);
@@ -48,7 +47,7 @@ namespace LingoLogger.Data.Access
             {
                 // Primary Key
                 user.HasKey(u => u.Id);
-
+                user.HasQueryFilter(user => user.DeletedAt == null);
                 // Properties
                 user.Property(u => u.Id)
                       .IsRequired()

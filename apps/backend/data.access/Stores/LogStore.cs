@@ -19,6 +19,66 @@ public class LogStore : ILogStore
         _timeParser = timeParser;
     }
 
+    public async Task<IEnumerable<ApiLog>> GetLogsAsync(ulong discordId)
+    {
+        var logs = await _dbContext.Logs
+            .Where(l => l.User != null && l.User.DiscordId == discordId)
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(25)
+            .ToListAsync();
+
+        if (logs == null)
+        {
+            return [];
+        }
+
+        var apiLogs = logs.Select(MapTo);
+        return apiLogs;
+    }
+
+    private ApiLog MapTo(Log log)
+    {
+        return log switch
+        {
+            ReadableLog l => new ApiReadableLog()
+            {
+                Title = log.Title,
+                CharactersRead = l.CharactersRead,
+                Time = _timeParser.SecondsToTimeFormat(l.AmountOfSeconds),
+                Source = l.Source,
+                Medium = l.Medium,
+                CreatedAt = l.CreatedAt,
+            },
+            WatchableLog l => new ApiWatchableLog()
+            {
+                Title = log.Title,
+                Time = _timeParser.SecondsToTimeFormat(l.AmountOfSeconds),
+                Source = l.Source,
+                Medium = l.Medium,
+                CreatedAt = l.CreatedAt,
+            },
+            AudibleLog l => new ApiAudibleLog()
+            {
+                Title = log.Title,
+                Time = _timeParser.SecondsToTimeFormat(l.AmountOfSeconds),
+                Source = l.Source,
+                Medium = l.Medium,
+                CreatedAt = l.CreatedAt,
+            },
+            EpisodicLog l => new ApiEpisodicLog()
+            {
+                Title = log.Title,
+                Time = _timeParser.SecondsToTimeFormat(l.AmountOfSeconds),
+                Source = l.Source,
+                Medium = l.Medium,
+                AmountOfEpisodes = l.Episodes,
+                EpisodeLength = "",
+                CreatedAt = l.CreatedAt,
+            },
+            _ => throw new NotImplementedException(),
+        };
+    }
+
     public async Task SaveLogAsync(ApiReadableLog log, SaveLogOptions options)
     {
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -128,6 +188,23 @@ public class LogStore : ILogStore
             await transaction.RollbackAsync();
             _logger.LogError($"Failed saving reading log: {ex.Message}", ex);
         }
+    }
+
+    public async Task<ApiLog?> UndoMostRecentLogAsync(ulong discordId)
+    {
+        var log = await _dbContext.Logs
+            .Where(l => l.User.DiscordId == discordId)
+            .OrderByDescending(l => l.CreatedAt)
+            .FirstOrDefaultAsync();
+        if (log == null)
+        {
+            return null;
+        }
+
+        log.DeletedAt = DateTimeOffset.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        return MapTo(log);
     }
 
     private async Task<User> GetOrCreateUserAsync(Guid? id, ulong? discordId)

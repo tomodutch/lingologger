@@ -19,6 +19,37 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         _logStore = logStore;
     }
 
+    [SlashCommand("undo", "Undo most recent log")]
+    public async Task Undo()
+    {
+        await DeferAsync();
+        try
+        {
+            var userId = Context.User.Id;
+            var log = await _logStore.UndoMostRecentLogAsync(userId);
+            if (log == null)
+            {
+                await FollowupAsync("No logs found for this user");
+            }
+            else
+            {
+                var embedBuilder = new EmbedBuilder();
+                embedBuilder = embedBuilder
+                    .WithTitle("Log undone")
+                    .WithColor(Color.Blue)
+                    .WithDescription($"{log.CreatedAt}: {log.Time} {log.Title}")
+                    .WithCurrentTimestamp();
+
+                await FollowupAsync("Log undone", embed: embedBuilder.Build());
+            }
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Undo: {ex.Message}", ex);
+            await FollowupAsync("Could not undo most recent log. Please try again later.");
+        }
+    }
 
     // Subcommand for logging reading
     [SlashCommand("read", "Log a reading activity.")]
