@@ -30,7 +30,7 @@ public class LogStore : ILogStore
             {
                 Title = log.Title,
                 Medium = log.Medium,
-                AmountOfSeconds = 0,
+                AmountOfSeconds = seconds,
                 Source = log.Source,
             };
             if (log.CharactersRead.HasValue)
@@ -49,14 +49,85 @@ public class LogStore : ILogStore
         }
     }
 
-    public Task SaveLogAsync(ApiAudibleLog log, SaveLogOptions options)
+    public async Task SaveLogAsync(ApiAudibleLog log, SaveLogOptions options)
     {
-        throw new NotImplementedException();
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
+        {
+            var seconds = _timeParser.ParseTimeToSeconds(log.Time);
+            var user = await GetOrCreateUserAsync(options.UserId, options.DiscordId);
+            var dbLog = new AudibleLog()
+            {
+                Title = log.Title,
+                Medium = log.Medium,
+                AmountOfSeconds = seconds,
+                Source = log.Source,
+            };
+            user.Logs.Add(dbLog);
+            await _dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError($"Failed saving reading log: {ex.Message}", ex);
+        }
     }
 
-    public Task SaveLogAsync(ApiWatchableLog log, SaveLogOptions options)
+    public async Task SaveLogAsync(ApiWatchableLog log, SaveLogOptions options)
     {
-        throw new NotImplementedException();
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
+        {
+            var seconds = _timeParser.ParseTimeToSeconds(log.Time);
+            var user = await GetOrCreateUserAsync(options.UserId, options.DiscordId);
+            var dbLog = new WatchableLog()
+            {
+                Title = log.Title,
+                Medium = log.Medium,
+                AmountOfSeconds = seconds,
+                Source = log.Source,
+            };
+
+            user.Logs.Add(dbLog);
+            await _dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError($"Failed saving reading log: {ex.Message}", ex);
+        }
+    }
+
+    public async Task SaveLogAsync(ApiEpisodicLog log, SaveLogOptions options)
+    {
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
+        {
+            var episodes = log.AmountOfEpisodes;
+            var episodeLengthInSeconds = _timeParser.ParseTimeToSeconds(log.EpisodeLength);
+            var seconds = episodes * episodeLengthInSeconds;
+            var user = await GetOrCreateUserAsync(options.UserId, options.DiscordId);
+            var dbLog = new EpisodicLog()
+            {
+                Title = log.Title,
+                Medium = log.Medium,
+                AmountOfSeconds = seconds,
+                EpisodeLengthInSeconds = seconds,
+                Episodes = episodes,
+                Source = log.Source,
+            };
+
+            user.Logs.Add(dbLog);
+            await _dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError($"Failed saving reading log: {ex.Message}", ex);
+        }
     }
 
     private async Task<User> GetOrCreateUserAsync(Guid? id, ulong? discordId)

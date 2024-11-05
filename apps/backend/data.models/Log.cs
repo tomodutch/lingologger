@@ -24,6 +24,10 @@ public class AudibleLog : Log
 
 public class WatchableLog : Log
 {
-    public int? EpisodesWatched { get; set; }
-    public int? EpisodeLengthInMinutes { get; set; }
+}
+
+public class EpisodicLog : Log
+{
+    public int? Episodes { get; set; }
+    public int? EpisodeLengthInSeconds { get; set; }
 }

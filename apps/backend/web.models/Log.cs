@@ -20,6 +20,10 @@ public class ApiAudibleLog : ApiLog
 
 public class ApiWatchableLog : ApiLog
 {
-    public int? EpisodesWatched { get; set; }
-    public int? EpisodeLengthInMinutes { get; set; }
+}
+
+public class ApiEpisodicLog : ApiLog
+{
+    public int AmountOfEpisodes { get; set; }
+    public required string EpisodeLength { get; set; }
 }

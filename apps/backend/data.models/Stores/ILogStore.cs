@@ -7,6 +7,7 @@ public interface ILogStore
     public Task SaveLogAsync(ApiReadableLog log, SaveLogOptions options);
     public Task SaveLogAsync(ApiAudibleLog log, SaveLogOptions options);
     public Task SaveLogAsync(ApiWatchableLog log, SaveLogOptions options);
+    public Task SaveLogAsync(ApiEpisodicLog log, SaveLogOptions options);
 }
 
 

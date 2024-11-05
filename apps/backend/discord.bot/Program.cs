@@ -57,7 +57,7 @@ public class Program
                 {
                     LogLevel = LogSeverity.Debug,
                     GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMembers | GatewayIntents.GuildMessages,
-                    AlwaysDownloadUsers = true
+                    AlwaysDownloadUsers = false
                 })
                 .AddHostedService<BotHostedService>();
 

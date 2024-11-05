@@ -7,6 +7,12 @@ public class PingInteraction : InteractionModuleBase<SocketInteractionContext>
     [SlashCommand("ping", "Echo an input")]
     public async Task Ping()
     {
-        await RespondAsync("pong");
+        try
+        {
+            await DeferAsync();
+        } catch (Exception ex) {
+            ex.ToString();
+        }
+        await FollowupAsync("pong");
     }
 }

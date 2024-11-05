@@ -16,7 +16,8 @@ namespace LingoLogger.Data.Access
                 .HasDiscriminator<string>("LogType")
                 .HasValue<ReadableLog>("Readable")
                 .HasValue<AudibleLog>("Audible")
-                .HasValue<WatchableLog>("Watchable");
+                .HasValue<WatchableLog>("Watchable")
+                .HasValue<EpisodicLog>("Episodic");
 
             modelBuilder.Entity<Log>(log =>
             {

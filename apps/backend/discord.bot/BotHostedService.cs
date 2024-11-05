@@ -80,7 +80,9 @@ public class BotHostedService : IHostedService
         var context = new SocketInteractionContext(_client, interaction);
         try
         {
-            await _interactionService.ExecuteCommandAsync(context, _serviceProvider).ConfigureAwait(false);
+            _logger.LogInformation($"Incoming: {DateTimeOffset.UtcNow}");
+            await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
+            _logger.LogInformation($"Outgoing: {DateTimeOffset.UtcNow}");
         }
         catch (Exception ex)
         {
