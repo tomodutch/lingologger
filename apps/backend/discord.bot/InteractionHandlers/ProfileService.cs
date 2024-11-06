@@ -68,7 +68,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
             }
             else
             {
-                var chartStream = await _chartService.GenerateChartAsync();
+                var chartStream = await _chartService.GenerateChartAsync(interaction);
                 var embedBuilder = new EmbedBuilder();
                 embedBuilder = embedBuilder
                     .WithColor(Color.Blue)
