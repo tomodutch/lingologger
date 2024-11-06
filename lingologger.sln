@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "discord.bot", "apps\backend
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "web.models", "apps\backend\web.models\web.models.csproj", "{7890AB93-143E-4613-BA30-135763D685B9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test.discord.bot", "apps\backend\test.discord.bot\test.discord.bot.csproj", "{4AF35EDD-6687-4EA2-9CE9-DAF193BE4F5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{7890AB93-143E-4613-BA30-135763D685B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7890AB93-143E-4613-BA30-135763D685B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7890AB93-143E-4613-BA30-135763D685B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AF35EDD-6687-4EA2-9CE9-DAF193BE4F5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AF35EDD-6687-4EA2-9CE9-DAF193BE4F5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AF35EDD-6687-4EA2-9CE9-DAF193BE4F5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AF35EDD-6687-4EA2-9CE9-DAF193BE4F5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +60,7 @@ Global
 		{281EC446-FF26-4DCC-B661-CE6717F97A7F} = {49780416-C1B5-4CA7-A934-AE03128B459C}
 		{2D10A969-B6B7-441D-BBB1-763B56A20D22} = {49780416-C1B5-4CA7-A934-AE03128B459C}
 		{7890AB93-143E-4613-BA30-135763D685B9} = {49780416-C1B5-4CA7-A934-AE03128B459C}
+		{4AF35EDD-6687-4EA2-9CE9-DAF193BE4F5B} = {49780416-C1B5-4CA7-A934-AE03128B459C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8749FFE1-6903-403B-B7B1-4744B48AEF96}

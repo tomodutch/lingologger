@@ -7,9 +7,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using LingoLogger.Data.Access;
 using Microsoft.EntityFrameworkCore;
-using LingoLogger.Data.Models.Stores;
-using LingoLogger.Data.Access.Stores;
 using LingoLogger.Web.Models;
+using LingoLogger.Discord.Bot.InteractionHandlers;
 
 namespace LingoLogger.Discord.Bot;
 
@@ -46,8 +45,10 @@ public class Program
         services.AddDbContext<LingoLoggerDbContext>(options =>
             options.UseNpgsql(connectionString));
         services.AddSingleton<DiscordSocketClient>()
-                .AddTransient<ILogStore, LogStore>()
+                .AddTransient<SocketInteractionContext>()
                 .AddTransient<TimeParser>()
+                .AddTransient<LogService>()
+                .AddTransient<ProfileService>()
                 .AddSingleton(x =>
                 {
                     var client = x.GetRequiredService<DiscordSocketClient>();
