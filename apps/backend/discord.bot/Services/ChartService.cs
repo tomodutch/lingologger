@@ -59,8 +59,8 @@ public class ChartService(ILogger<ChartService> logger, HttpClient httpClient, L
 
             var content = new BarChartRequest()
             {
-                Title = "my chart",
-                Index = distinctDates.Select(d => d.ToString("yyyy-MM-dd")).ToList(),
+                Title = $"{interaction.User.GlobalName}'s logs",
+                Index = distinctDates.Select(d => d.ToString("MM-dd")).ToList(),
                 Data = data,
                 XAxisTitle = "",
                 YAxisTitle = "Minutes"

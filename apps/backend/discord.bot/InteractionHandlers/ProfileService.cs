@@ -22,67 +22,46 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
             var userId = interaction.User.Id;
             var today = DateTimeOffset.UtcNow;
             var logs = await _dbContext.Logs.Where(l => l.User.DiscordId == interaction.User.Id)
-                .Where(l => l.CreatedAt.UtcDateTime.Year == today.Year && l.CreatedAt.UtcDateTime.DayOfYear == today.DayOfYear)
-                .ToListAsync();
+                .Where(l => l.CreatedAt.Date >= today.AddDays(-7).Date)
+                .GroupBy(l => l.LogType)
+                .Select(g => new
+                {
+                    logType = g.Key,
+                    TotalMinutes = Math.Round(g.Sum(l => l.AmountOfSeconds) / 60.0)
+                })
+                .ToDictionaryAsync(x => x.logType, x => x.TotalMinutes);
 
-            var profile = new ApiProfile()
-            {
-                ReadTimeFormatted = "0s",
-                ReadTimeInSeconds = 0,
-                ListenTimeFormatted = "0s",
-                ListenTimeInSeconds = 0,
-                WatchTimeFormatted = "0s",
-                WatchTimeInSeconds = 0,
-                EpisodesWatched = 0
-            };
-
+            var embedBuilder = new EmbedBuilder();
+            embedBuilder = embedBuilder
+                .WithColor(Color.Blue)
+                .WithThumbnailUrl(interaction.User.GetAvatarUrl())
+                .WithTitle($"{interaction.User.GlobalName}'s profile")
+                .WithDescription("Stats for the passed 7 days")
+                .WithImageUrl("attachment://chart.png")
+                .WithCurrentTimestamp();
             foreach (var log in logs)
             {
-                switch (log)
+                var t = log.Key switch
                 {
-                    case ReadableLog readableLog:
-                        profile.ReadTimeInSeconds += readableLog.AmountOfSeconds;
-                        break;
-                    case AudibleLog audibleLog:
-                        profile.ListenTimeInSeconds += audibleLog.AmountOfSeconds;
-                        break;
-                    case WatchableLog watchableLog:
-                        profile.WatchTimeInSeconds += watchableLog.AmountOfSeconds;
-                        break;
-                    case EpisodicLog episodicLog:
-                        profile.WatchTimeInSeconds += episodicLog.AmountOfSeconds;
-                        profile.EpisodesWatched += episodicLog.Episodes;
-                        break;
-                    default:
-                        _logger.LogWarning($"{log.GetType()}: not supported in profile.");
-                        break;
-                }
+                    "Audible" => "Listened",
+                    "Readable" => "Read",
+                    "Watchable" => "Watched",
+                    "Episodic" => "Episodes",
+                    _ => log.Key
+                };
+
+                embedBuilder.AddField(t, $"{log.Value} minutes");
             }
-            var timeParser = new TimeParser();
-            profile.ReadTimeFormatted = timeParser.SecondsToTimeFormat(profile.ReadTimeInSeconds);
-            profile.ListenTimeFormatted = timeParser.SecondsToTimeFormat(profile.ListenTimeInSeconds);
-            profile.WatchTimeFormatted = timeParser.SecondsToTimeFormat(profile.WatchTimeInSeconds);
-            if (profile == null)
+
+            await interaction.FollowupAsync(embed: embedBuilder.Build());
+            var chartStream = await _chartService.GenerateChartAsync(interaction);
+            await interaction.ModifyOriginalResponseAsync((e) =>
             {
-                await interaction.FollowupAsync("No logs found.");
-            }
-            else
-            {
-                var chartStream = await _chartService.GenerateChartAsync(interaction);
-                var embedBuilder = new EmbedBuilder();
-                embedBuilder = embedBuilder
-                    .WithColor(Color.Blue)
-                    .WithThumbnailUrl(interaction.User.GetAvatarUrl())
-                    .WithTitle($"{interaction.User.GlobalName}'s profile")
-                    .WithDescription("Stats for today")
-                    .AddField("Reading", profile.ReadTimeFormatted)
-                    .AddField("Listening", profile.ListenTimeFormatted)
-                    .AddField("Watching", profile.WatchTimeFormatted)
-                    .AddField("Episodes watched", profile.EpisodesWatched)
-                    .WithImageUrl("attachment://chart.png")
-                    .WithCurrentTimestamp();
-                await interaction.FollowupWithFileAsync(chartStream, "chart.png", embed: embedBuilder.Build());
-            }
+                e.Embed = embedBuilder.WithImageUrl("attachment://chart.png").Build();
+                e.Attachments = new[] {
+                    new FileAttachment(chartStream, "chart.png")
+                };
+            });
         }
         catch (Exception ex)
         {

@@ -40,7 +40,7 @@ def generate_barchart():
     # Define a color-blind-friendly palette with increased contrast
     colors = ["#E69F00", "#56B4E9", "#009E73", "#F0E442"]
     # *+-./OX\ox|
-    hatch_patterns = ['x', '+', '|']  # Different hatch patterns for each category
+    hatch_patterns = ['x', '+', '|', 'O']  # Different hatch patterns for each category
 
     # Create a DataFrame
     df = pd.DataFrame(data, index)
