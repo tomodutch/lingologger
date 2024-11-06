@@ -9,6 +9,7 @@ using LingoLogger.Data.Access;
 using Microsoft.EntityFrameworkCore;
 using LingoLogger.Web.Models;
 using LingoLogger.Discord.Bot.InteractionHandlers;
+using LingoLogger.Discord.Bot.Services;
 
 namespace LingoLogger.Discord.Bot;
 
@@ -44,6 +45,14 @@ public class Program
 
         services.AddDbContext<LingoLoggerDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        services.AddHttpClient<ChartService>((services, client) =>
+        {
+            var baseUrl = "http://localhost:5000";
+            client.BaseAddress = new Uri(baseUrl);
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
         services.AddSingleton<DiscordSocketClient>()
                 .AddTransient<SocketInteractionContext>()
                 .AddTransient<TimeParser>()

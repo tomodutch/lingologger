@@ -5,6 +5,9 @@
 .vs/
 .idea/
 
+# python
+.venv
+
 # Build Folders
 bin/
 obj/

@@ -1,16 +1,18 @@
 using Discord;
 using LingoLogger.Data.Access;
 using LingoLogger.Data.Models;
+using LingoLogger.Discord.Bot.Services;
 using LingoLogger.Web.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LingoLogger.Discord.Bot.InteractionHandlers;
 
-public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext dbContext)
+public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext dbContext, ChartService chartService)
 {
     private readonly ILogger<ProfileService> _logger = logger;
     private readonly LingoLoggerDbContext _dbContext = dbContext;
+    private readonly ChartService _chartService = chartService;
 
     public async Task GetProfileAsync(IDiscordInteraction interaction)
     {
@@ -66,6 +68,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
             }
             else
             {
+                var chartStream = await _chartService.GenerateChartAsync();
                 var embedBuilder = new EmbedBuilder();
                 embedBuilder = embedBuilder
                     .WithColor(Color.Blue)
@@ -76,8 +79,9 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                     .AddField("Listening", profile.ListenTimeFormatted)
                     .AddField("Watching", profile.WatchTimeFormatted)
                     .AddField("Episodes watched", profile.EpisodesWatched)
+                    .WithImageUrl("attachment://chart.png")
                     .WithCurrentTimestamp();
-                await interaction.FollowupAsync(embed: embedBuilder.Build());
+                await interaction.FollowupWithFileAsync(chartStream, "chart.png", embed: embedBuilder.Build());
             }
         }
         catch (Exception ex)

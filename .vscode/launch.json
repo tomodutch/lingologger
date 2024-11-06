@@ -1,37 +1,46 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "name": ".NET Web API",
-        "type": "coreclr",
-        "request": "launch",
-        "program": "${workspaceFolder}/apps/backend/web.api/bin/Debug/net8.0/web.api.dll",
-        "args": [],
-        "cwd": "${workspaceFolder}/apps/backend/web.api",
-        "preLaunchTask": "build:webapi",
-        "stopAtEntry": false,
-        "serverReadyAction": {
-          "action": "openExternally",
-          "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-        },
-        "env": {
-          "ASPNETCORE_ENVIRONMENT": "Development"
-        },
-        "sourceFileMap": {
-          "/Views": "${workspaceFolder}/Views"
-        }
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run chart api",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/backend/chart.api/chartapi/api.py",
+      "console": "integratedTerminal",
+      "windows": {
+        "python": "${workspaceFolder}/apps/backend/chart.api/.venv/Scripts/python.exe"
       },
-      {
-        "name": "Discord Bot",
-        "type": "coreclr",
-        "preLaunchTask": "build:bot",
-        "request": "launch",
-        "program": "${workspaceFolder}/apps/backend/discord.bot/bin/Debug/net8.0/discord.bot.dll",
-        "args": [],
-        "cwd": "${workspaceFolder}/apps/backend/discord.bot",
-        "stopAtEntry": false,
-        "console": "integratedTerminal"
+    },
+    {
+      "name": ".NET Web API",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/backend/web.api/bin/Debug/net8.0/web.api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/apps/backend/web.api",
+      "preLaunchTask": "build:webapi",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
       }
-    ]
-  }
-  
+    },
+    {
+      "name": "Discord Bot",
+      "type": "coreclr",
+      "preLaunchTask": "build:bot",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/backend/discord.bot/bin/Debug/net8.0/discord.bot.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/apps/backend/discord.bot",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    }
+  ]
+}
