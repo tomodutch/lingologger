@@ -6,9 +6,9 @@ services:
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_DB=${{ secrets.DB_NAME }}
-      - POSTGRES_USER=${{ secrets.DB_USER }}
-      - POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }}
+      - POSTGRES_DB=${ DB_NAME }
+      - POSTGRES_USER=${ DB_USER }
+      - POSTGRES_PASSWORD=${ DB_PASSWORD }
     restart: always  # Automatically restarts on failure
   bot:
     build:
@@ -20,7 +20,7 @@ services:
     environment:
       Discord__BotToken: "${BotToken}"
       ChartApiUri: http://chartapi:5000
-      ConnectionStrings__DbConnection: "Host=db;Database=${{secrets.DB_NAME}};Username=${{secrets.DB_USER}};Password=${{secrets.DB_PASSWORD}}"
+      ConnectionStrings__DbConnection: "Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
     restart: always  # Ensures the bot restarts on failure
 
   chartapi:
@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: apps/backend/migrations/Dockerfile
     environment:
-      ConnectionStrings__DbConnection: "Host=db;Database=${{secrets.DB_NAME}};Username=${{secrets.DB_USER}};Password=${{secrets.DB_PASSWORD}}"
+      ConnectionStrings__DbConnection: "Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
     depends_on:
       - db
     entrypoint: /bin/bash -c "dotnet ef database update --project ./apps/backend/data.access"
