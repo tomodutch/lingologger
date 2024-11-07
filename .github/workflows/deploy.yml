@@ -10,12 +10,13 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-    - name: Create .env file
-      run: |
-        echo "DB_NAME=${{ secrets.DB_NAME }}" > .env
-        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-        echo "BotToken=${{ secrets.BotToken }}" >> .env
+
+      - name: Create .env file
+        run: |
+          echo "DB_NAME=${{ secrets.DB_NAME }}" > .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "BotToken=${{ secrets.BotToken }}" >> .env
 
       - name: Build Docker image
         run: docker compose -f docker-compose.prod.yml --env-file .env build --quiet
