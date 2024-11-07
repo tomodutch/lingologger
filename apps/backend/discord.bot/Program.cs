@@ -48,8 +48,8 @@ public class Program
 
         services.AddHttpClient<ChartService>((services, client) =>
         {
-            var baseUrl = "http://localhost:5000";
-            client.BaseAddress = new Uri(baseUrl);
+            var chartApiUri = context.Configuration.GetValue<Uri>("ChartApiUri");
+            client.BaseAddress = chartApiUri;
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 

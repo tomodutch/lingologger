@@ -1,0 +1,21 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker compose -f docker-compose.prod.yml build
+
+      - name: Deploy with Docker Compose
+        run: docker compose up -d --remove-orphans bot
+
+      - name: Execute migrations
+        run: docker compose -f ./docker-compose.prod.yml run --rm dbmigrations

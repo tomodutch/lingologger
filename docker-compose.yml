@@ -1,17 +1,8 @@
 version: '3.8'
 services:
   db:
-    image: timescale/timescaledb-ha:pg16
+    image: timescale/timescaledb:pg16
     ports:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=dev
-  dbgui:
-    image: dpage/pgadmin4
-    ports:
-      - 5433:80
-    volumes:
-      - ./servers.json:/pgadmin4/servers.json
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=dev@example.com
-      - PGADMIN_DEFAULT_PASSWORD=dev

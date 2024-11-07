@@ -1,0 +1,43 @@
+# Ignore files and directories for .NET projects
+**/bin/
+**/obj/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.ide
+
+# Ignore node_modules and build directories for JavaScript projects
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+
+# Ignore Python-specific files and directories
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.venv/
+**/.env/
+**/env/
+
+# Ignore system-specific and IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.log
+
+# Ignore Docker-related files
+Dockerfile*
+docker-compose*.yml
+
+# Ignore general system and temporary files
+*.bak
+*.tmp
+*.log
+*.DS_Store
+Thumbs.db
+
+# Ignore Git-specific files
+.git/
+.gitmodules

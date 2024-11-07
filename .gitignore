@@ -5,6 +5,7 @@
 .vs/
 .idea/
 
+.database
 # python
 .venv
 
@@ -12,6 +13,8 @@
 bin/
 obj/
 out/
+
+.env.dev
 
 # ASP.NET
 # appsettings.*.json
