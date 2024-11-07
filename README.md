@@ -21,12 +21,12 @@ docker build -f .\apps\backend\discord.bot\Dockerfile -t discord-bot .
 
 run bot docker image
 ```
-docker compose -f .\docker-compose.dev.yml up -d --remove-orphans --build bot
+docker compose -d --remove-orphans --build bot
 # run migrations
-docker compose -f .\docker-compose.dev.yml run dbmigrations
+docker compose run dbmigrations
 ```
 
 stop all containers
 ```
-docker compose -f .\docker-compose.dev.yml down --remove-orphans
+docker compose down --remove-orphans
 ```
