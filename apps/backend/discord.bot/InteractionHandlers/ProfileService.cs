@@ -37,7 +37,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 .WithThumbnailUrl(interaction.User.GetAvatarUrl())
                 .WithTitle($"{interaction.User.GlobalName}'s profile")
                 .WithDescription("Stats for the passed 7 days")
-                .WithImageUrl("attachment://chart.png")
+                .WithImageUrl("attachment://loading-chart.png")
                 .WithCurrentTimestamp();
             foreach (var log in logs)
             {
@@ -53,15 +53,33 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 embedBuilder.AddField(t, $"{log.Value} minutes");
             }
 
-            await interaction.FollowupAsync(embed: embedBuilder.Build());
-            var chartStream = await _chartService.GenerateChartAsync(interaction);
-            await interaction.ModifyOriginalResponseAsync((e) =>
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Images", "loading-chart.png");
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            await interaction.FollowupWithFileAsync(stream, "loading-chart.png", embed: embedBuilder.Build());
+            try
             {
-                e.Embed = embedBuilder.WithImageUrl("attachment://chart.png").Build();
-                e.Attachments = new[] {
+                var chartStream = await _chartService.GenerateChartAsync(interaction);
+                await interaction.ModifyOriginalResponseAsync((e) =>
+                {
+                    e.Embed = embedBuilder.WithImageUrl("attachment://chart.png").Build();
+                    e.Attachments = new[] {
                     new FileAttachment(chartStream, "chart.png")
-                };
-            });
+                    };
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("/profile could not generate chart", ex);
+                var errorFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Images", "loading-chart-error.png");
+                using var errorFileStream = new FileStream(errorFilePath, FileMode.Open, FileAccess.Read);
+                await interaction.ModifyOriginalResponseAsync((e) =>
+                {
+                    e.Embed = embedBuilder.WithImageUrl("attachment://loading-chart-error.png").Build();
+                    e.Attachments = new[] {
+                    new FileAttachment(errorFileStream, "loading-chart-error.png")
+                    };
+                });
+            }
         }
         catch (Exception ex)
         {
