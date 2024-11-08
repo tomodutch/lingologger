@@ -21,6 +21,7 @@ services:
       Discord__BotToken: "${BotToken}"
       ChartApiUri: http://chartapi:5000
       ConnectionStrings__DbConnection: "Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT}"
     restart: always  # Ensures the bot restarts on failure
 
   chartapi:

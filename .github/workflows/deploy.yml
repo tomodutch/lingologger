@@ -12,6 +12,7 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       BotToken: ${{ secrets.BotToken }}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OLTP_ENDPOINT }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -22,6 +23,7 @@ jobs:
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           echo "BotToken=${{ secrets.BotToken }}" >> .env
+          echo "OTEL_EXPORTER_OTLP_ENDPOINT=${{ secrets.OLTP_ENDPOINT }}" >> .env
 
       - name: Build Docker image
         run: docker compose -f docker-compose.prod.yml --env-file .env build --no-cache
