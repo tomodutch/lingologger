@@ -32,8 +32,8 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("medium", "Type of media read.")]
         [Choice("Book", "book")]
         [Choice("Visual Novel", "vn")]
-        [Choice("Light Novel", "ln")]
-        [Choice("News", "news")] string medium,
+        [Choice("News", "news")]
+        [Choice("Other", "other")] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
         [Summary("title", "Title of the book or material read.")] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes = null,
@@ -61,12 +61,12 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("notes", "Additional notes about the reading.")] string? notes)
     {
         await _service.LogEpisodicAsync(
-    Context.Interaction,
-    medium,
-    episodes,
-    episodeLength,
-    title,
-    notes);
+            Context.Interaction,
+            medium,
+            episodes,
+            episodeLength,
+            title,
+            notes);
     }
 
     // Subcommand for logging watching
@@ -92,6 +92,9 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
     // Subcommand for logging listening
     [SlashCommand("listened", "Log a listening activity.")]
     public async Task LogListening(
+        [Choice("Audiobook", "audiobook")]
+        [Choice("Podcast", "podcast")]
+        [Choice("Other", "other")]
         [Summary("media", "Type of media being listened to.")] string medium,
         [Summary("time", "Time spent listening.")] string time,
         [Summary("title", "Title of the audio.")] string title,
