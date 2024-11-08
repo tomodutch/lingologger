@@ -24,7 +24,7 @@ jobs:
           echo "BotToken=${{ secrets.BotToken }}" >> .env
 
       - name: Build Docker image
-        run: docker compose -f docker-compose.prod.yml --env-file .env build --quiet
+        run: docker compose -f docker-compose.prod.yml --env-file .env build
 
       - name: Deploy with Docker Compose
         run: docker compose -f docker-compose.prod.yml --env-file .env up -d --remove-orphans bot
