@@ -1,46 +1,61 @@
-using System.Globalization;
 using System.Text;
 using Discord;
 using LingoLogger.Data.Access;
 using LingoLogger.Data.Models;
+using LingoLogger.Discord.Bot.InteractionParameters;
+using LingoLogger.Discord.Bot.Validators;
 using LingoLogger.Web.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LingoLogger.Discord.Bot.InteractionHandlers;
 
-public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbContext)
+public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbContext, LogReadParametersValidator logReadParamsValidator)
 {
     private readonly ILogger<LogService> _logger = logger;
     private readonly LingoLoggerDbContext _dbContext = dbContext;
     private readonly TimeParser _timeParser = new();
+    private readonly LogReadParametersValidator _logReadParamsValidator = logReadParamsValidator;
 
-    public async Task LogReadAsync(IDiscordInteraction interaction, string medium, string time, string title, int? characters, string? notes, string? createdAtString = null)
+    public async Task LogReadAsync(IDiscordInteraction interaction, LogReadParameters param)
     {
+        var validationResult = _logReadParamsValidator.Validate(param);
+
+        if (!validationResult.IsValid) {
+            await interaction.RespondAsync(embed: new EmbedBuilder()
+                .WithThumbnailUrl(interaction.User.GetAvatarUrl())
+                .WithTitle("Invalid input")
+                .WithDescription("Could not create log")
+                .WithFields(validationResult.Errors.Select(e => new EmbedFieldBuilder().WithName(e.PropertyName).WithValue(e.ErrorMessage)))
+                .WithCurrentTimestamp()
+                .Build());
+            return;
+        }
+
         await interaction.DeferAsync();
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
             _logger.LogInformation($"Incoming readable {DateTimeOffset.UtcNow}");
-            var seconds = _timeParser.ParseTimeToSeconds(time);
+            var seconds = _timeParser.ParseTimeToSeconds(param.Time);
             var user = await GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new ReadableLog()
             {
-                Title = title,
-                Medium = medium,
+                Title = param.Title,
+                Medium = param.Medium,
                 AmountOfSeconds = seconds,
                 Source = "Discord",
             };
-            SetCreatedAtIfBacklog(createdAtString, dbLog);
-            if (characters.HasValue)
+            SetCreatedAtIfBacklog(param.Date, dbLog);
+            if (param.Characters.HasValue)
             {
-                dbLog.CharactersRead = characters;
-                dbLog.Coefficient = characters.Value / (seconds / 3600.0);
+                dbLog.CharactersRead = param.Characters;
+                dbLog.Coefficient = param.Characters.Value / (seconds / 3600.0);
             }
             user.Logs.Add(dbLog);
             await _dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
-            var description = $"Title: {title}\nTime: {time}\nCharacters: {(characters.HasValue ? characters.Value.ToString() : "N/A")}\nNotes: {notes ?? "No notes provided."}";
+            var description = $"Title: {param.Title}\nTime: {param.Time}\nCharacters: {(param.Characters.HasValue ? param.Characters.Value.ToString() : "N/A")}\nNotes: {param.Notes ?? "No notes provided."}";
             await interaction.FollowupAsync("logged", embed: BuildCreatedLogEmbed(interaction, description));
             _logger.LogInformation($"Send response {DateTimeOffset.UtcNow}");
         }

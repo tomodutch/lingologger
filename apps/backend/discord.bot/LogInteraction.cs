@@ -1,9 +1,7 @@
 using System.Text.RegularExpressions;
-using Discord;
 using Discord.Interactions;
-using LingoLogger.Data.Models.Stores;
 using LingoLogger.Discord.Bot.InteractionHandlers;
-using LingoLogger.Web.Models;
+using LingoLogger.Discord.Bot.InteractionParameters;
 using Microsoft.Extensions.Logging;
 
 namespace LingoLogger.Discord.Bot;
@@ -40,15 +38,15 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("characters", "Total number of characters read.")] int? characters = null,
         [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
-        await _service.LogReadAsync(
-            Context.Interaction,
-            medium,
-            time,
-            title,
-            characters,
-            notes,
-            createdAt
-        );
+        var param = new LogReadParameters() {
+            Medium = medium,
+            Title = title,
+            Time = time,
+            Characters = characters,
+            Notes = notes,
+            Date = createdAt
+        };
+        await _service.LogReadAsync(Context.Interaction,param);
     }
 
     [SlashCommand("episodes", "Log a watching activity.")]

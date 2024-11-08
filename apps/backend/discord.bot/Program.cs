@@ -15,6 +15,8 @@ using Grafana.OpenTelemetry;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
+using FluentValidation;
+using LingoLogger.Discord.Bot.Validators;
 
 namespace LingoLogger.Discord.Bot;
 
@@ -74,6 +76,7 @@ public class Program
                     GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMembers | GatewayIntents.GuildMessages,
                     AlwaysDownloadUsers = false
                 })
+                .AddValidatorsFromAssemblyContaining<LogReadParametersValidator>()
                 .AddHostedService<BotHostedService>();
         using var tracerProvider = Sdk.CreateTracerProviderBuilder()
             .UseGrafana()
