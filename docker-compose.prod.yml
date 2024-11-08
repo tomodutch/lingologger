@@ -17,6 +17,7 @@ services:
     depends_on:
       - db
       - chartapi
+    entrypoint: ["/otel-dotnet-auto/instrument.sh", "dotnet", "discord.bot.dll"]
     environment:
       Discord__BotToken: "${BotToken}"
       ChartApiUri: http://chartapi:5000
