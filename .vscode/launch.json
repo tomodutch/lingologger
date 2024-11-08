@@ -38,6 +38,9 @@
       "request": "launch",
       "program": "${workspaceFolder}/apps/backend/discord.bot/bin/Debug/net8.0/discord.bot.dll",
       "args": [],
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
       "cwd": "${workspaceFolder}/apps/backend/discord.bot",
       "stopAtEntry": false,
       "console": "integratedTerminal"

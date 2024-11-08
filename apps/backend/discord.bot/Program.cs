@@ -10,6 +10,11 @@ using Microsoft.EntityFrameworkCore;
 using LingoLogger.Web.Models;
 using LingoLogger.Discord.Bot.InteractionHandlers;
 using LingoLogger.Discord.Bot.Services;
+using OpenTelemetry;
+using Grafana.OpenTelemetry;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Logs;
 
 namespace LingoLogger.Discord.Bot;
 
@@ -70,7 +75,26 @@ public class Program
                     AlwaysDownloadUsers = false
                 })
                 .AddHostedService<BotHostedService>();
-
-        services.AddLogging();
+        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .UseGrafana()
+            .Build();
+        var meterProviderBuilder = Sdk.CreateMeterProviderBuilder().UseGrafana();
+        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+        {
+            meterProviderBuilder = meterProviderBuilder.AddConsoleExporter();
+        }
+        using var meterProvider = meterProviderBuilder.Build();
+        using var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddOpenTelemetry(logging =>
+            {
+                logging.UseGrafana();
+                if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+                {
+                    logging.AddConsoleExporter();
+                }
+            });
+        });
+        // services.AddLogging();
     }
 }
