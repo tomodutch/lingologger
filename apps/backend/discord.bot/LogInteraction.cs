@@ -37,7 +37,8 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("time", "Time spent watching in minutes.")] string time,
         [Summary("title", "Title of the book or material read.")] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes = null,
-        [Summary("characters", "Total number of characters read.")] int? characters = null)
+        [Summary("characters", "Total number of characters read.")] int? characters = null,
+        [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
         await _service.LogReadAsync(
             Context.Interaction,
@@ -45,7 +46,8 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
             time,
             title,
             characters,
-            notes
+            notes,
+            createdAt
         );
     }
 

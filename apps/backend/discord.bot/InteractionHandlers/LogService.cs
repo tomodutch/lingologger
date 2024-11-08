@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Discord;
 using LingoLogger.Data.Access;
@@ -14,7 +15,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
     private readonly LingoLoggerDbContext _dbContext = dbContext;
     private readonly TimeParser _timeParser = new();
 
-    public async Task LogReadAsync(IDiscordInteraction interaction, string medium, string time, string title, int? characters, string? notes)
+    public async Task LogReadAsync(IDiscordInteraction interaction, string medium, string time, string title, int? characters, string? notes, string? createdAtString = null)
     {
         await interaction.DeferAsync();
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -30,6 +31,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 AmountOfSeconds = seconds,
                 Source = "Discord",
             };
+            SetCreatedAtIfBacklog(createdAtString, dbLog);
             if (characters.HasValue)
             {
                 dbLog.CharactersRead = characters;
@@ -50,7 +52,8 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
     }
 
-    public async Task LogAudibleAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes)
+
+    public async Task LogAudibleAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes, string? createdAtString = null)
     {
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
         await interaction.DeferAsync();
@@ -65,6 +68,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 AmountOfSeconds = seconds,
                 Source = "Discord",
             };
+            SetCreatedAtIfBacklog(createdAtString, dbLog);
             user.Logs.Add(dbLog);
             await _dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -79,7 +83,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
     }
 
-    public async Task LogWatchableAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes)
+    public async Task LogWatchableAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes, string? createdAtString = null)
     {
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
         await interaction.DeferAsync();
@@ -94,7 +98,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 AmountOfSeconds = seconds,
                 Source = "Discord",
             };
-
+            SetCreatedAtIfBacklog(createdAtString, dbLog);
             user.Logs.Add(dbLog);
             await _dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -110,7 +114,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
     }
 
-    public async Task LogEpisodicAsync(IDiscordInteraction interaction, string medium, int amountOfEpisodes, string episodeLength, string title, string? notes)
+    public async Task LogEpisodicAsync(IDiscordInteraction interaction, string medium, int amountOfEpisodes, string episodeLength, string title, string? notes, string? createdAtString = null)
     {
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
         await interaction.DeferAsync();
@@ -128,7 +132,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 Episodes = amountOfEpisodes,
                 Source = "Discord",
             };
-
+            SetCreatedAtIfBacklog(createdAtString, dbLog);
             user.Logs.Add(dbLog);
             await _dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -236,7 +240,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
     }
 
-    private Embed BuildCreatedLogEmbed(IDiscordInteraction interaction, string description)
+    private static Embed BuildCreatedLogEmbed(IDiscordInteraction interaction, string description)
     {
         var embed = new EmbedBuilder()
             .WithTitle("Created log")
@@ -246,5 +250,19 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             .WithThumbnailUrl(interaction.User.GetAvatarUrl())
             .WithFooter("Thank you for logging your reading activity!");
         return embed.Build();
+    }
+
+    private void SetCreatedAtIfBacklog(string? createdAtString, Log dbLog)
+    {
+        if (createdAtString == null)
+        {
+            return;
+        }
+
+        var createdAt = _timeParser.ParseBacklogDate(createdAtString);
+        if (createdAt.HasValue)
+        {
+            dbLog.CreatedAt = createdAt.Value;
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -60,5 +61,28 @@ public class TimeParser
         }
 
         return totalSeconds;
+    }
+
+    public DateTimeOffset? ParseBacklogDate(string createdAtString)
+    {
+        if (createdAtString == null)
+        {
+            return null;
+        }
+
+        var formatted = createdAtString.ToLowerInvariant().Trim();
+
+        if (formatted == "yesterday")
+        {
+            return new DateTimeOffset(DateTimeOffset.UtcNow.AddDays(-1).UtcDateTime.Date, TimeSpan.Zero);
+        }
+
+        var canParse = DateTimeOffset.TryParseExact(createdAtString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var createdAt);
+        if (canParse)
+        {
+            return createdAt;
+        }
+
+        return null;
     }
 }
