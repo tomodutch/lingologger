@@ -60,7 +60,9 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("title", "Title of the video or show.")] string title,
         [Summary("episodes", "Number of episodes watched.")] int episodes,
         [Summary("episode_length", "Length of each episode")] string episodeLength,
-        [Summary("notes", "Additional notes about the reading.")] string? notes)
+        [Summary("notes", "Additional notes about the reading.")] string? notes,
+        [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
+
     {
         await _service.LogEpisodicAsync(
             Context.Interaction,
@@ -68,7 +70,8 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
             episodes,
             episodeLength,
             title,
-            notes);
+            notes,
+            createdAt);
     }
 
     // Subcommand for logging watching
@@ -81,14 +84,16 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("media", "Type of medium being watched (e.g., YouTube, anime, drama, other).")] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
         [Summary("title", "Title of the video or show.")] string title,
-        [Summary("notes", "Additional notes about the reading.")] string? notes)
+        [Summary("notes", "Additional notes about the reading.")] string? notes,
+        [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
         await _service.LogWatchableAsync(
             Context.Interaction,
             medium,
             time,
             title,
-            notes);
+            notes,
+            createdAt);
     }
 
     // Subcommand for logging listening
@@ -100,13 +105,15 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("media", "Type of media being listened to.")] string medium,
         [Summary("time", "Time spent listening.")] string time,
         [Summary("title", "Title of the audio.")] string title,
-        [Summary("notes", "Additional notes about the reading.")] string? notes)
+        [Summary("notes", "Additional notes about the reading.")] string? notes,
+        [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
         await _service.LogAudibleAsync(
             Context.Interaction,
             medium,
             time,
             title,
-            notes);
+            notes,
+            createdAt);
     }
 }
