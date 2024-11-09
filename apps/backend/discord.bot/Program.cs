@@ -64,7 +64,9 @@ public class Program
                 .AddTransient<SocketInteractionContext>()
                 .AddTransient<TimeParser>()
                 .AddTransient<LogService>()
+                .AddTransient<UserService>()
                 .AddTransient<ProfileService>()
+                .AddTransient<GoalService>()
                 .AddSingleton(x =>
                 {
                     var client = x.GetRequiredService<DiscordSocketClient>();

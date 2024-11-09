@@ -63,7 +63,7 @@ public class TimeParser
         return totalSeconds;
     }
 
-    public DateTimeOffset? ParseBacklogDate(string createdAtString)
+    public DateTimeOffset? ParseDate(string createdAtString)
     {
         if (createdAtString == null)
         {
@@ -75,6 +75,11 @@ public class TimeParser
         if (formatted == "yesterday")
         {
             return new DateTimeOffset(DateTimeOffset.UtcNow.AddDays(-1).UtcDateTime.Date, TimeSpan.Zero);
+        }
+
+        if (formatted == "tomorrow")
+        {
+            return new DateTimeOffset(DateTimeOffset.UtcNow.AddDays(1).UtcDateTime.Date, TimeSpan.Zero);
         }
 
         var canParse = DateTimeOffset.TryParseExact(createdAtString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var createdAt);

@@ -7,6 +7,7 @@ namespace LingoLogger.Data.Access
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Log> Logs { get; set; }
+        public DbSet<Goal> Goals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -62,6 +63,27 @@ namespace LingoLogger.Data.Access
                       .HasForeignKey(l => l.UserId)
                       .OnDelete(DeleteBehavior.Cascade); // Cascade delete if a user is deleted
                 user.Property(l => l.CreatedAt)
+                      .IsRequired()
+                      .HasColumnType("timestamptz")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+            });
+
+            modelBuilder.Entity<Goal>(goal =>
+            {
+                goal.ToTable("Goals");
+                goal.HasKey(g => g.Id);
+                goal.HasIndex(g => g.UserId);
+                goal.HasOne(g => g.User)
+                    .WithMany(u => u.Goals)
+                    .HasForeignKey(g => g.UserId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+                goal.Property(g => g.EndsAt).IsRequired().HasColumnType("timestamptz");
+                goal.Property(g => g.TargetTimeInSeconds).IsRequired();
+                goal.Property(l => l.DeletedAt)
+                      .IsRequired(false)
+                      .HasColumnType("timestamptz");
+                goal.Property(l => l.CreatedAt)
                       .IsRequired()
                       .HasColumnType("timestamptz")
                       .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");

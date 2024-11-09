@@ -3,6 +3,7 @@ using Discord;
 using LingoLogger.Data.Access;
 using LingoLogger.Data.Models;
 using LingoLogger.Discord.Bot.InteractionParameters;
+using LingoLogger.Discord.Bot.Services;
 using LingoLogger.Discord.Bot.Validators;
 using LingoLogger.Web.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,12 +11,13 @@ using Microsoft.Extensions.Logging;
 
 namespace LingoLogger.Discord.Bot.InteractionHandlers;
 
-public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbContext, LogReadParametersValidator logReadParamsValidator)
+public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbContext, LogReadParametersValidator logReadParamsValidator, UserService userService)
 {
     private readonly ILogger<LogService> _logger = logger;
     private readonly LingoLoggerDbContext _dbContext = dbContext;
     private readonly TimeParser _timeParser = new();
     private readonly LogReadParametersValidator _logReadParamsValidator = logReadParamsValidator;
+    private readonly UserService _userService = userService;
 
     public async Task LogReadAsync(IDiscordInteraction interaction, LogReadParameters param)
     {
@@ -38,7 +40,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         {
             _logger.LogInformation($"Incoming readable {DateTimeOffset.UtcNow}");
             var seconds = _timeParser.ParseTimeToSeconds(param.Time);
-            var user = await GetOrCreateUserAsync(interaction.User.Id);
+            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new ReadableLog()
             {
                 Title = param.Title,
@@ -75,7 +77,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         try
         {
             var seconds = _timeParser.ParseTimeToSeconds(time);
-            var user = await GetOrCreateUserAsync(interaction.User.Id);
+            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new AudibleLog()
             {
                 Title = title,
@@ -105,7 +107,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         try
         {
             var seconds = _timeParser.ParseTimeToSeconds(time);
-            var user = await GetOrCreateUserAsync(interaction.User.Id);
+            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new WatchableLog()
             {
                 Title = title,
@@ -137,7 +139,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         {
             var episodeLengthInSeconds = _timeParser.ParseTimeToSeconds(episodeLength);
             var seconds = amountOfEpisodes * episodeLengthInSeconds;
-            var user = await GetOrCreateUserAsync(interaction.User.Id);
+            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new EpisodicLog()
             {
                 Title = title,
@@ -161,21 +163,6 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             _logger.LogError($"Failed logging episodic: {ex.Message}", ex);
             await interaction.FollowupAsync("An error occurred while logging. Try again later");
         }
-    }
-
-    private async Task<User> GetOrCreateUserAsync(ulong discordId)
-    {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.DiscordId == discordId);
-        if (user == null)
-        {
-            user = new User()
-            {
-                DiscordId = discordId,
-            };
-            await _dbContext.AddAsync(user);
-        }
-
-        return user;
     }
 
     public async Task UndoMostRecentLogAsync(IDiscordInteraction interaction)
@@ -274,7 +261,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             return;
         }
 
-        var createdAt = _timeParser.ParseBacklogDate(createdAtString);
+        var createdAt = _timeParser.ParseDate(createdAtString);
         if (createdAt.HasValue)
         {
             dbLog.CreatedAt = createdAt.Value;

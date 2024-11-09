@@ -29,7 +29,7 @@ public class LogReadParametersValidator : AbstractValidator<LogReadParameters>
             .WithMessage("Characters must be greater than 0 if specified");
         RuleFor(x => x.Date).Must(createdAtString =>
         {
-            var parsed = timeParser.ParseBacklogDate(createdAtString!);
+            var parsed = timeParser.ParseDate(createdAtString!);
             return parsed != null;
         }).When(x => x.Date != null).WithMessage("Not a valid date");
     }
