@@ -24,24 +24,26 @@ public class GoalService(ILogger<GoalService> logger, LingoLoggerDbContext dbCon
         {
             var goals = await _dbContext.Goals
                 .Where(g => g.User.DiscordId == interaction.User.Id)
+                .OrderByDescending(g => g.EndsAt)
                 .Select(g => new
                 {
                     Goal = g,
                     SpentTime = _dbContext.Logs
-                        .Where(l => l.UserId == g.UserId && l.CreatedAt >= g.CreatedAt && l.CreatedAt <= g.EndsAt)
+                        .Where(l => l.UserId == g.UserId && l.CreatedAt.Date >= g.CreatedAt.Date && l.CreatedAt.Date <= g.EndsAt!.Value.Date)
                         .Sum(l => l.AmountOfSeconds)
                 })
                 .ToListAsync();
             var embedBuilder = new EmbedBuilder()
                 .WithTitle($"{interaction.User.GlobalName}'s goals")
                 .WithThumbnailUrl(interaction.User.GetAvatarUrl())
+                .WithImageUrl("https://media.giphy.com/media/kKtAJrJUQnuikFZr3c/giphy.gif?cid=790b7611n4cmq8azlqxjd0m730di68l7jp7o6ne3hot5nfyx&ep=v1_gifs_search&rid=giphy.gif&ct=g")
                 .WithCurrentTimestamp();
-            var description = string.Join(",", goals.Select(g =>
+            var description = string.Join("\n", goals.Select(g =>
             {
                 var time = _timeParser.SecondsToTimeFormat(g.SpentTime);
                 var targetTime = _timeParser.SecondsToTimeFormat(g.Goal.TargetTimeInSeconds);
                 var progress = Math.Round((double)g.SpentTime / g.Goal.TargetTimeInSeconds * 100, 1);
-                return $"{time}/{targetTime} ({progress}%)";
+                return $"- {time}/{targetTime} ({progress}%)";
             }));
 
             await interaction.FollowupAsync(embed: embedBuilder.WithDescription(description).Build());
@@ -54,6 +56,7 @@ public class GoalService(ILogger<GoalService> logger, LingoLoggerDbContext dbCon
                 .WithTitle($"{interaction.User.GlobalName}'s goals could not be fetched")
                 .WithDescription("Error fetching goals. Please try again later")
                 .WithThumbnailUrl(interaction.User.GetAvatarUrl())
+                .WithImageUrl("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzNtcWxlc2w4d3ozdXRjNjM3M3IwdjV3YW1qMjJ1anBqOXlkenBpciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uDIfs260heCkUagE76/giphy.gif")
                 .WithCurrentTimestamp();
             await interaction.FollowupAsync(embed: embedBuilder.Build());
         }
@@ -82,6 +85,7 @@ public class GoalService(ILogger<GoalService> logger, LingoLoggerDbContext dbCon
                 .WithColor(Color.Blue)
                 .WithTitle("Created goal")
                 .WithDescription("TODO: goal")
+                .WithImageUrl("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzNtcWxlc2w4d3ozdXRjNjM3M3IwdjV3YW1qMjJ1anBqOXlkenBpciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/CkTRTXDIFhix8Vp5Oz/giphy.gif")
                 .WithThumbnailUrl(interaction.User.GetAvatarUrl())
                 .WithCurrentTimestamp()
                 .Build());
@@ -92,6 +96,7 @@ public class GoalService(ILogger<GoalService> logger, LingoLoggerDbContext dbCon
             await interaction.FollowupAsync(embed: new EmbedBuilder()
                 .WithColor(Color.Orange)
                 .WithTitle("Goal could not be created")
+                .WithImageUrl("https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZWVtNzYyM2c0MTVjaWo3c3ViZmxzYW5uemppMHB3aW51YTc1OThiaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/nM9Fzo0gFnCyQKv28u/giphy.gif")
                 .WithDescription("Error creating goal. Please try again later")
                 .WithThumbnailUrl(interaction.User.GetAvatarUrl())
                 .WithCurrentTimestamp()

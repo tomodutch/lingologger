@@ -228,7 +228,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 foreach (var log in logs)
                 {
                     var time = _timeParser.SecondsToTimeFormat(log.AmountOfSeconds);
-                    sb.Append($"{log.CreatedAt}: {time} {log.Medium} {log.Title}  \n");
+                    sb.Append($"- {log.CreatedAt}: {time} {log.Medium} {log.Title}  \n");
                 }
 
                 embedBuilder.WithDescription(sb.ToString());
@@ -250,6 +250,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             .WithColor(Color.Blue)
             .WithTimestamp(DateTimeOffset.UtcNow)
             .WithThumbnailUrl(interaction.User.GetAvatarUrl())
+            .WithImageUrl("https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExb3VuNHJsdmloOWNtaHc5NGR0ZjcxeXcxeXZucjgzdHdranRhdzE4cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WjPmpgwiaxwHgohCfD/giphy.gif")
             .WithFooter("Thank you for logging your reading activity!");
         return embed.Build();
     }
