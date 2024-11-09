@@ -11,17 +11,11 @@ using Microsoft.Extensions.Logging;
 
 namespace LingoLogger.Discord.Bot.InteractionHandlers;
 
-public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbContext, LogReadParametersValidator logReadParamsValidator, UserService userService)
+public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbContext, LogReadParametersValidator logReadParamsValidator, UserService userService, TimeParser timeParser)
 {
-    private readonly ILogger<LogService> _logger = logger;
-    private readonly LingoLoggerDbContext _dbContext = dbContext;
-    private readonly TimeParser _timeParser = new();
-    private readonly LogReadParametersValidator _logReadParamsValidator = logReadParamsValidator;
-    private readonly UserService _userService = userService;
-
     public async Task LogReadAsync(IDiscordInteraction interaction, LogReadParameters param)
     {
-        var validationResult = _logReadParamsValidator.Validate(param);
+        var validationResult = logReadParamsValidator.Validate(param);
 
         if (!validationResult.IsValid) {
             await interaction.RespondAsync(embed: new EmbedBuilder()
@@ -35,12 +29,12 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
 
         await interaction.DeferAsync();
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        using var transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
-            _logger.LogInformation($"Incoming readable {DateTimeOffset.UtcNow}");
-            var seconds = _timeParser.ParseTimeToSeconds(param.Time);
-            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
+            logger.LogInformation($"Incoming readable {DateTimeOffset.UtcNow}");
+            var seconds = timeParser.ParseTimeToSeconds(param.Time);
+            var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new ReadableLog()
             {
                 Title = param.Title,
@@ -55,15 +49,15 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 dbLog.Coefficient = param.Characters.Value / (seconds / 3600.0);
             }
             user.Logs.Add(dbLog);
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
             var description = $"Title: {param.Title}\nTime: {param.Time}\nCharacters: {(param.Characters.HasValue ? param.Characters.Value.ToString() : "N/A")}\nNotes: {param.Notes ?? "No notes provided."}";
             await interaction.FollowupAsync("logged", embed: BuildCreatedLogEmbed(interaction, description));
-            _logger.LogInformation($"Send response {DateTimeOffset.UtcNow}");
+            logger.LogInformation($"Send response {DateTimeOffset.UtcNow}");
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Failed logging readable: {ex.Message}", ex);
+            logger.LogError($"Failed logging readable: {ex.Message}", ex);
             await transaction.RollbackAsync();
             await interaction.FollowupAsync("An error occurred while logging. Try again later");
         }
@@ -72,12 +66,12 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
 
     public async Task LogAudibleAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes, string? createdAtString = null)
     {
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        using var transaction = await dbContext.Database.BeginTransactionAsync();
         await interaction.DeferAsync();
         try
         {
-            var seconds = _timeParser.ParseTimeToSeconds(time);
-            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
+            var seconds = timeParser.ParseTimeToSeconds(time);
+            var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new AudibleLog()
             {
                 Title = title,
@@ -87,7 +81,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             };
             SetCreatedAtIfBacklog(createdAtString, dbLog);
             user.Logs.Add(dbLog);
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
             var description = "Listening logged";
             await interaction.FollowupAsync(embed: BuildCreatedLogEmbed(interaction, description));
@@ -95,19 +89,19 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            _logger.LogError($"Failed logging audible: {ex.Message}", ex);
+            logger.LogError($"Failed logging audible: {ex.Message}", ex);
             await interaction.FollowupAsync("An error occurred while logging. Try again later");
         }
     }
 
     public async Task LogWatchableAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes, string? createdAtString = null)
     {
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        using var transaction = await dbContext.Database.BeginTransactionAsync();
         await interaction.DeferAsync();
         try
         {
-            var seconds = _timeParser.ParseTimeToSeconds(time);
-            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
+            var seconds = timeParser.ParseTimeToSeconds(time);
+            var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new WatchableLog()
             {
                 Title = title,
@@ -117,7 +111,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             };
             SetCreatedAtIfBacklog(createdAtString, dbLog);
             user.Logs.Add(dbLog);
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
 
             var description = "Watchable logged";
@@ -126,20 +120,20 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            _logger.LogError($"Failed logging watchable: {ex.Message}", ex);
+            logger.LogError($"Failed logging watchable: {ex.Message}", ex);
             await interaction.FollowupAsync("An error occurred while logging. Try again later");
         }
     }
 
     public async Task LogEpisodicAsync(IDiscordInteraction interaction, string medium, int amountOfEpisodes, string episodeLength, string title, string? notes, string? createdAtString = null)
     {
-        using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        using var transaction = await dbContext.Database.BeginTransactionAsync();
         await interaction.DeferAsync();
         try
         {
-            var episodeLengthInSeconds = _timeParser.ParseTimeToSeconds(episodeLength);
+            var episodeLengthInSeconds = timeParser.ParseTimeToSeconds(episodeLength);
             var seconds = amountOfEpisodes * episodeLengthInSeconds;
-            var user = await _userService.GetOrCreateUserAsync(interaction.User.Id);
+            var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new EpisodicLog()
             {
                 Title = title,
@@ -151,7 +145,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             };
             SetCreatedAtIfBacklog(createdAtString, dbLog);
             user.Logs.Add(dbLog);
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
             await transaction.CommitAsync();
 
             var description = "Watchable logged";
@@ -160,7 +154,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            _logger.LogError($"Failed logging episodic: {ex.Message}", ex);
+            logger.LogError($"Failed logging episodic: {ex.Message}", ex);
             await interaction.FollowupAsync("An error occurred while logging. Try again later");
         }
     }
@@ -170,7 +164,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         await interaction.DeferAsync();
         try
         {
-            var log = await _dbContext.Logs
+            var log = await dbContext.Logs
                 .Where(l => l.User.DiscordId == interaction.User.Id)
                 .OrderByDescending(l => l.CreatedAt)
                 .FirstOrDefaultAsync();
@@ -182,8 +176,8 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             else
             {
                 log.DeletedAt = DateTimeOffset.UtcNow;
-                await _dbContext.SaveChangesAsync();
-                var time = _timeParser.SecondsToTimeFormat(log.AmountOfSeconds);
+                await dbContext.SaveChangesAsync();
+                var time = timeParser.SecondsToTimeFormat(log.AmountOfSeconds);
                 var embedBuilder = new EmbedBuilder();
                 embedBuilder = embedBuilder
                     .WithTitle("Log undone")
@@ -196,7 +190,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Undo: {ex.Message}", ex);
+            logger.LogError($"Undo: {ex.Message}", ex);
             await interaction.FollowupAsync("Could not undo most recent log. Please try again later.");
         }
     }
@@ -207,8 +201,8 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         try
         {
             var userId = interaction.User.Id;
-            // var logs = await _logStore.GetLogsAsync(userId);
-            var logs = _dbContext.Logs
+            // var logs = await logStore.GetLogsAsync(userId);
+            var logs = dbContext.Logs
                 .Where(l => l.User.DiscordId == userId)
                 .OrderByDescending(l => l.CreatedAt)
                 .Take(25);
@@ -227,7 +221,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 var sb = new StringBuilder();
                 foreach (var log in logs)
                 {
-                    var time = _timeParser.SecondsToTimeFormat(log.AmountOfSeconds);
+                    var time = timeParser.SecondsToTimeFormat(log.AmountOfSeconds);
                     sb.Append($"- {log.CreatedAt}: {time} {log.Medium} {log.Title}  \n");
                 }
 
@@ -237,7 +231,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
         catch (Exception ex)
         {
-            _logger.LogError($"/logs: {ex.Message}", ex);
+            logger.LogError($"/logs: {ex.Message}", ex);
             await interaction.FollowupAsync("An error occurred while fetching the logs. Please try again later.");
         }
     }
@@ -262,7 +256,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             return;
         }
 
-        var createdAt = _timeParser.ParseDate(createdAtString);
+        var createdAt = timeParser.ParseDate(createdAtString);
         if (createdAt.HasValue)
         {
             dbLog.CreatedAt = createdAt.Value;

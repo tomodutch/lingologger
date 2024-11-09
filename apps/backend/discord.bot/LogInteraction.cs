@@ -33,12 +33,13 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Choice("News", "news")]
         [Choice("Other", "other")] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
-        [Summary("title", "Title of the book or material read.")] string title,
+        [Summary("title", "Title of the book or material read."), Autocomplete(typeof(BookAutocompleteHandler))] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes = null,
         [Summary("characters", "Total number of characters read.")] int? characters = null,
         [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
-        var param = new LogReadParameters() {
+        var param = new LogReadParameters()
+        {
             Medium = medium,
             Title = title,
             Time = time,
@@ -46,7 +47,7 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
             Notes = notes,
             Date = createdAt
         };
-        await _service.LogReadAsync(Context.Interaction,param);
+        await _service.LogReadAsync(Context.Interaction, param);
     }
 
     [SlashCommand("episodes", "Log a watching activity.")]

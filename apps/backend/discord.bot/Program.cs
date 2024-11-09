@@ -60,11 +60,21 @@ public class Program
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
+        services.AddHttpClient<GoogleBookApiService>((services, client) =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddMemoryCache(options =>
+        {
+            options.SizeLimit = 10_000_000; // max size in bytes before cache starts evicting
+            options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
+        });
         services.AddSingleton<DiscordSocketClient>()
                 .AddTransient<SocketInteractionContext>()
                 .AddTransient<TimeParser>()
                 .AddTransient<LogService>()
                 .AddTransient<UserService>()
+                .AddTransient<GoogleBookApiService>()
                 .AddTransient<ProfileService>()
                 .AddTransient<GoalService>()
                 .AddSingleton(x =>
