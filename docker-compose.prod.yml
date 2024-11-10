@@ -46,6 +46,8 @@ services:
       context: .
       dockerfile: apps/backend/chart.api/Dockerfile
     restart: always # Ensures the service restarts on failure
+    ports:
+      - 5000:5000
   dbmigrations:
     build:
       context: .

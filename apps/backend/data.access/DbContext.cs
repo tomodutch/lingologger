@@ -21,8 +21,7 @@ namespace LingoLogger.Data.Access
                     .HasValue<WatchableLog>("Watchable")
                     .HasValue<EpisodicLog>("Episodic");
 
-                log.HasQueryFilter(log => !log.DeletedAt.HasValue);
-                log.HasQueryFilter(log => !log.User.DeletedAt.HasValue);
+                log.HasQueryFilter(log => log.DeletedAt == null);
                 log.HasKey(l => new { l.UserId, l.CreatedAt });
                 log.HasIndex(l => l.UserId);
                 log.Property(l => l.UserId).IsRequired();
@@ -53,7 +52,7 @@ namespace LingoLogger.Data.Access
             {
                 // Primary Key
                 user.HasKey(u => u.Id);
-                user.HasQueryFilter(user => !user.DeletedAt.HasValue);
+                user.HasQueryFilter(user => user.DeletedAt == null);
                 // Properties
                 user.Property(u => u.Id)
                       .IsRequired()
@@ -76,8 +75,8 @@ namespace LingoLogger.Data.Access
             modelBuilder.Entity<Goal>(goal =>
             {
                 goal.ToTable("Goals");
-                goal.HasQueryFilter(g => !g.DeletedAt.HasValue);
-                goal.HasQueryFilter(g => !g.User.DeletedAt.HasValue);
+                goal.HasQueryFilter(g => g.DeletedAt == null);
+                goal.HasQueryFilter(g => g.User.DeletedAt == null);
                 goal.HasKey(g => g.Id);
                 goal.HasIndex(g => g.UserId);
                 goal.HasOne(g => g.User)
@@ -99,7 +98,7 @@ namespace LingoLogger.Data.Access
             modelBuilder.Entity<TogglIntegration>(e =>
             {
                 e.ToTable("toggleIntegrations");
-                e.HasQueryFilter(e => !e.DeletedAt.HasValue);
+                e.HasQueryFilter(e => e.DeletedAt == null);
                 e.HasKey(e => e.Id);
                 e.Property(e => e.WebhookSecret).HasMaxLength(50);
                 e.Property(e => e.IsVerified).HasDefaultValue(false);
