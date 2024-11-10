@@ -8,6 +8,7 @@ namespace LingoLogger.Data.Access
         public DbSet<User> Users { get; set; }
         public DbSet<Log> Logs { get; set; }
         public DbSet<Goal> Goals { get; set; }
+        public DbSet<TogglIntegration> TogglIntegrations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,6 +98,7 @@ namespace LingoLogger.Data.Access
                 e.ToTable("toggleIntegrations");
                 e.HasKey(e => e.Id);
                 e.Property(e => e.WebhookSecret).HasMaxLength(50);
+                e.Property(e => e.IsVerified).HasDefaultValue(false);
                 e.HasOne(e => e.User)
                     .WithMany(u => u.TogglIntegrations)
                     .HasForeignKey(e => e.UserId)

@@ -20,7 +20,8 @@ public class TogglIntegrationHandler(ILogger<TogglIntegrationHandler> logger, Us
             {
                 WebhookSecret = secret,
                 UserId = user.Id,
-                User = user
+                User = user,
+                IsVerified = false
             };
             user.TogglIntegrations.Add(integration);
             await dbContext.SaveChangesAsync();

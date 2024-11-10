@@ -9,7 +9,9 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-    restart: always  # Automatically restarts on failure
+    restart: always # Automatically restarts on failure
+    networks:
+      - backend-network
   bot:
     build:
       context: .
@@ -23,14 +25,29 @@ services:
       ChartApiUri: http://chartapi:5000
       ConnectionStrings__DbConnection: "Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT}"
-    restart: always  # Ensures the bot restarts on failure
+    restart: always # Ensures the bot restarts on failure
+    networks:
+      - backend-network
+  webapi:
+    build:
+      context: .
+      dockerfile: apps/backend/web.api/Dockerfile
+    depends_on:
+      - db
+    entrypoint: ["/otel-dotnet-auto/instrument.sh", "dotnet", "web.api.dll"]
+    environment:
+      ConnectionStrings__DbConnection: "Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT}"
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+    restart: always # Ensures the bot restarts on failure
+    networks:
+      - backend-network
 
   chartapi:
     build:
       context: .
       dockerfile: apps/backend/chart.api/Dockerfile
-    restart: always  # Ensures the service restarts on failure
-
+    restart: always # Ensures the service restarts on failure
   dbmigrations:
     build:
       context: .
@@ -40,4 +57,19 @@ services:
     depends_on:
       - db
     entrypoint: /bin/bash -c "dotnet ef database update --project ./apps/backend/data.access"
-    restart: on-failure  # Only restart if the service fails
+    restart: on-failure # Only restart if the service fails
+    networks:
+      - backend-network
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf # Mount your custom nginx.conf
+    ports:
+      - "8080:8080" # Expose external port 8080
+    depends_on:
+      - webapi
+    networks:
+      - backend-network
+networks:
+  backend-network:
+    driver: bridge
