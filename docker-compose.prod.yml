@@ -3,8 +3,6 @@ services:
     image: timescale/timescaledb:latest-pg16
     volumes:
       - /var/lib/postgresql/data:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
