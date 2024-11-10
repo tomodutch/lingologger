@@ -65,46 +65,73 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
             else if (payloadProperty.Value.ValueKind == JsonValueKind.Object)
             {
                 var payload = TryDeserializePayload<TimeEntryPayload>(payloadProperty.Value);
-                if (payload != null)
+                if (payload != null && payload.Stop.HasValue)
                 {
-                    if (payload.Tags.Contains("read") && payload.Stop.HasValue)
+                    var duration = (payload.Stop - payload.Start).Value.TotalSeconds;
+                    var log = await dbContext.Logs
+                        .Where(l => l.UserId == integration.UserId)
+                        .Where(l => l.Source == "Toggl")
+                        .Where(l => l.SourceEventId == payload.Id.ToString())
+                        .FirstOrDefaultAsync(token);
+                    if (log != null)
                     {
-                        var duration = (payload.Stop - payload.Start).Value.TotalSeconds;
-                        var log = await dbContext.Logs
-                            .Where(l => l.UserId == integration.UserId)
-                            .Where(l => l.Source == "Toggl")
-                            .Where(l => l.SourceEventId == payload.Id.ToString())
-                            .FirstOrDefaultAsync(token);
-
-                        if (log == null)
+                        // TODO: Handle change log types
+                        log.Title = payload.Description;
+                        log.CreatedAt = payload.Stop.Value;
+                        log.AmountOfSeconds = (int)duration;
+                        logger.LogInformation($"Integration {integrationId} updated log");
+                    }
+                    else if (payload.Tags.Contains("listening", StringComparer.OrdinalIgnoreCase))
+                    {
+                        log = new AudibleLog()
                         {
-                            log = new ReadableLog()
-                            {
-                                Title = payload.Description,
-                                UserId = integration.User.Id,
-                                User = integration.User,
-                                Medium = "Book",
-                                CreatedAt = payload.Stop.Value,
-                                AmountOfSeconds = (int)duration,
-                                Source = "Toggl",
-                                SourceEventId = payload.Id.ToString()
-                            };
-                            await dbContext.Logs.AddAsync(log);
-                            logger.LogInformation($"Integration {integrationId} added log");
-                        }
-                        else
+                            Title = payload.Description,
+                            UserId = integration.User.Id,
+                            User = integration.User,
+                            Medium = "Unknown",
+                            CreatedAt = payload.Stop.Value,
+                            AmountOfSeconds = (int)duration,
+                            Source = "Toggl",
+                            SourceEventId = payload.Id.ToString()
+                        };
+                        await dbContext.Logs.AddAsync(log, token);
+                        logger.LogInformation($"Integration {integrationId} added log");
+                    }
+                    else if (payload.Tags.Contains("watching", StringComparer.OrdinalIgnoreCase))
+                    {
+                        log = new WatchableLog()
                         {
-                            log.Title = payload.Description;
-                            log.CreatedAt = payload.Stop.Value;
-                            log.AmountOfSeconds = (int)duration;
-                            logger.LogInformation($"Integration {integrationId} updated log");
-                        }
-
-                        await dbContext.SaveChangesAsync(token);
+                            Title = payload.Description,
+                            UserId = integration.User.Id,
+                            User = integration.User,
+                            Medium = "Unknown",
+                            CreatedAt = payload.Stop.Value,
+                            AmountOfSeconds = (int)duration,
+                            Source = "Toggl",
+                            SourceEventId = payload.Id.ToString()
+                        };
+                        await dbContext.Logs.AddAsync(log, token);
+                        logger.LogInformation($"Integration {integrationId} added log");
+                    }
+                    else if (payload.Tags.Contains("read", StringComparer.OrdinalIgnoreCase))
+                    {
+                        log = new ReadableLog()
+                        {
+                            Title = payload.Description,
+                            UserId = integration.User.Id,
+                            User = integration.User,
+                            Medium = "Unknown",
+                            CreatedAt = payload.Stop.Value,
+                            AmountOfSeconds = (int)duration,
+                            Source = "Toggl",
+                            SourceEventId = payload.Id.ToString()
+                        };
+                        await dbContext.Logs.AddAsync(log, token);
+                        logger.LogInformation($"Integration {integrationId} added log");
                     }
 
+                    await dbContext.SaveChangesAsync(token);
                 }
-
             }
 
             await transaction.CommitAsync(token);
