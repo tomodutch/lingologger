@@ -8,5 +8,5 @@ public class TogglIntegration
     public required User User { get; set; }
     public required bool IsVerified {get; set;} = false;
     public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset DeletedAt { get; set; }
+    public DateTimeOffset? DeletedAt { get; set; }
 }

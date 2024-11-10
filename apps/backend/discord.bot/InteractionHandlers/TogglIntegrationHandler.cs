@@ -37,7 +37,7 @@ public class TogglIntegrationHandler(ILogger<TogglIntegrationHandler> logger, Us
                 4) Click on **+ Create new webhook**
                 5) Fill in the form. The name can be anything
                 6) For events. Make sure to select all **Time Entry** events
-                7) Url endpoint: https://api.example.com/users/{user.Id}/toggl/{integration.Id}
+                7) Url endpoint: https://lingologger.app/api/users/{user.Id}/toggl/{integration.Id}
                 8) Secret: {secret}
                 9) Click on **Add Webhook**
                 ".Trim())
