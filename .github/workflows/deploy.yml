@@ -5,6 +5,13 @@ on:
       - main
 
 jobs:
+  cancel_previous_runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Workflow Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     runs-on: self-hosted
     env:
