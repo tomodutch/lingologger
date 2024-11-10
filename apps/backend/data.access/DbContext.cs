@@ -29,6 +29,7 @@ namespace LingoLogger.Data.Access
                 log.Property(l => l.Source).IsRequired().HasMaxLength(100);
                 log.Property(l => l.AmountOfSeconds).IsRequired().HasMaxLength(60 * 60 * 24);
                 log.Property(l => l.Coefficient).IsRequired().HasMaxLength(60 * 60 * 24);
+                log.Property(l => l.SourceEventId).HasMaxLength(100);
                 log.Property(l => l.CreatedAt)
                       .IsRequired()
                       .HasColumnType("timestamptz")
@@ -41,6 +42,8 @@ namespace LingoLogger.Data.Access
                     .HasForeignKey(l => l.UserId)
                     .IsRequired()
                     .OnDelete(DeleteBehavior.Cascade);
+
+                log.HasIndex(l => new { l.UserId, l.SourceEventId });
             });
 
             // Configure User entity
@@ -87,6 +90,24 @@ namespace LingoLogger.Data.Access
                       .IsRequired()
                       .HasColumnType("timestamptz")
                       .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+            });
+
+            modelBuilder.Entity<TogglIntegration>(e =>
+            {
+                e.ToTable("toggleIntegrations");
+                e.HasKey(e => e.Id);
+                e.Property(e => e.WebhookSecret).HasMaxLength(50);
+                e.HasOne(e => e.User)
+                    .WithMany(u => u.TogglIntegrations)
+                    .HasForeignKey(e => e.UserId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.Property(e => e.CreatedAt)
+                      .IsRequired()
+                      .HasColumnType("timestamptz")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+                e.Property(e => e.DeletedAt).HasColumnType("timestamptz");
             });
         }
     }

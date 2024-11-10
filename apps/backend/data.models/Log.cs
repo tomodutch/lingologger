@@ -12,6 +12,7 @@ public abstract class Log
     public int AmountOfSeconds { get; set; }
     public double Coefficient { get; set; }
     public required string Source { get; set; }
+    public string? SourceEventId { get; set; }
 }
 
 public class ReadableLog : Log

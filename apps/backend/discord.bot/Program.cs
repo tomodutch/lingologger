@@ -77,6 +77,7 @@ public class Program
                 .AddTransient<GoogleBookApiService>()
                 .AddTransient<ProfileService>()
                 .AddTransient<GoalService>()
+                .AddTransient<TogglIntegrationHandler>()
                 .AddSingleton(x =>
                 {
                     var client = x.GetRequiredService<DiscordSocketClient>();
