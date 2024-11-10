@@ -17,6 +17,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
 using FluentValidation;
 using LingoLogger.Discord.Bot.Validators;
+using OpenTelemetry.Resources;
 
 namespace LingoLogger.Discord.Bot;
 
@@ -42,6 +43,10 @@ public class Program
                 logging.ClearProviders();
                 logging.AddConsole();
                 logging.AddDebug();
+                logging.AddOpenTelemetry(options =>
+                {
+                    options.UseGrafana();
+                });
                 // Optionally add other providers, such as AddEventLog or AddFile
             })
             .ConfigureServices(ConfigureServices);
@@ -91,26 +96,13 @@ public class Program
                 })
                 .AddValidatorsFromAssemblyContaining<LogReadParametersValidator>()
                 .AddHostedService<BotHostedService>();
-        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .UseGrafana()
-            .Build();
-        var meterProviderBuilder = Sdk.CreateMeterProviderBuilder().UseGrafana();
-        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+        services.AddOpenTelemetry().WithTracing(configure =>
         {
-            meterProviderBuilder = meterProviderBuilder.AddConsoleExporter();
-        }
-        using var meterProvider = meterProviderBuilder.Build();
-        using var loggerFactory = LoggerFactory.Create(builder =>
+            configure.UseGrafana();
+        })
+        .WithMetrics(configure =>
         {
-            builder.AddOpenTelemetry(logging =>
-            {
-                logging.UseGrafana();
-                if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-                {
-                    logging.AddConsoleExporter();
-                }
-            });
+            configure.UseGrafana();
         });
-        // services.AddLogging();
     }
 }

@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Grafana.OpenTelemetry;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Logs;
 
 namespace LingoLogger.Web.Api;
 
@@ -14,9 +18,24 @@ internal class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddControllers();
         builder.Services.AddHttpClient();
-        builder.Services.AddDbContext<LingoLogger.Data.Access.LingoLoggerDbContext>(options => {
+        builder.Services.AddDbContext<LingoLogger.Data.Access.LingoLoggerDbContext>(options =>
+        {
             options.UseNpgsql(builder.Configuration.GetConnectionString("DbConnection"));
         });
+        builder.Services.AddOpenTelemetry().WithTracing(configure =>
+        {
+            configure.UseGrafana();
+        })
+        .WithMetrics(configure =>
+        {
+            configure.UseGrafana();
+        });
+
+        builder.Logging.AddOpenTelemetry(options =>
+        {
+            options.UseGrafana();
+        });
+
         var app = builder.Build();
         app.MapControllers();
 
