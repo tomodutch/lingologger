@@ -14,19 +14,23 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
     [HttpPost("{userId}/toggl/{integrationId}")]
     public async Task<IActionResult> CreateTogglLog(string userId, string integrationId, [FromBody] JsonElement webhookJson, CancellationToken token)
     {
+        logger.LogInformation($"Incoming request. UserId: {userId}, integrationId: {integrationId}");
         if (!Guid.TryParse(userId, out var userGuid))
         {
+            logger.LogInformation($"Incoming request body has malformed user id: {userId}");
             return BadRequest(new ApiResponse(false, "Malformed request. user id is not a uuid", new { }));
         }
 
         if (!Guid.TryParse(integrationId, out var integrationGuid))
         {
+            logger.LogInformation($"Incoming request body has malformed integration id: {integrationId}");
             return BadRequest(new ApiResponse(false, "Malformed request. integration id is not a uuid", new { }));
         }
 
         var payloadProperty = GetJsonPayloadProperty(webhookJson);
         if (!payloadProperty.HasValue)
         {
+            logger.LogInformation($"Incoming request has malformed payload");
             return BadRequest(new ApiResponse(false, "Malformed request. Payload expected", new { }));
         }
 
@@ -35,9 +39,9 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
             .Where(t => t.Id == integrationGuid)
             .Include(t => t.User)
             .FirstOrDefaultAsync(token);
-
         if (integration == null || integration?.User == null)
         {
+            logger.LogInformation("No integration or user found");
             return Ok(new ApiResponse(success: true, message: "Webhook processed", data: new { }));
         }
 
@@ -49,9 +53,11 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                 var validationCodeUri = GetValidationUrl(webhookJson);
                 if (validationCodeUri != null)
                 {
+                    logger.LogInformation("Attempt validating toggl");
                     if (await SendValidationRequestAsync(validationCodeUri, token))
                     {
                         integration.IsVerified = true;
+                        logger.LogInformation($"Integration {integrationId} is now validated");
                         await dbContext.SaveChangesAsync(token);
                     }
                 }
@@ -84,12 +90,14 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                                 SourceEventId = payload.Id.ToString()
                             };
                             await dbContext.Logs.AddAsync(log);
+                            logger.LogInformation($"Integration {integrationId} added log");
                         }
                         else
                         {
                             log.Title = payload.Description;
                             log.CreatedAt = payload.Stop.Value;
                             log.AmountOfSeconds = (int)duration;
+                            logger.LogInformation($"Integration {integrationId} updated log");
                         }
 
                         await dbContext.SaveChangesAsync(token);
