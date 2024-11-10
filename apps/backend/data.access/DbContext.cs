@@ -113,6 +113,9 @@ namespace LingoLogger.Data.Access
                       .IsRequired()
                       .HasColumnType("timestamptz")
                       .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+                e.Property(e => e.DeletedAt)
+                    .IsRequired(false)
+                      .HasColumnType("timestamptz");
                 e.Property(e => e.DeletedAt).HasColumnType("timestamptz");
             });
         }
