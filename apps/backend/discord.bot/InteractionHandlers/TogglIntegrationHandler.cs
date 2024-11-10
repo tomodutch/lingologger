@@ -10,7 +10,7 @@ public class TogglIntegrationHandler(ILogger<TogglIntegrationHandler> logger, Us
 {
     public async Task CreateIntegrationAsync(IDiscordInteraction interaction)
     {
-        await interaction.DeferAsync();
+        await interaction.DeferAsync(ephemeral: true);
         using var transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
