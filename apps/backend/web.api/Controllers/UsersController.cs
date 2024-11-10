@@ -113,7 +113,7 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                         await dbContext.Logs.AddAsync(log, token);
                         logger.LogInformation($"Integration {integrationId} added log");
                     }
-                    else if (payload.Tags.Contains("read", StringComparer.OrdinalIgnoreCase))
+                    else if (payload.Tags.Contains("reading", StringComparer.OrdinalIgnoreCase))
                     {
                         log = new ReadableLog()
                         {
