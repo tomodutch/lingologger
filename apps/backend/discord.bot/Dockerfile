@@ -22,7 +22,7 @@ COPY --from=build /app/out ./
 
 ENV OTEL_DOTNET_AUTO_HOME="/otel-dotnet-auto"
 ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-ENV OTEL_SERVICE_NAME=lingologger-bot
-ENV OTEL_RESOURCE_ATTRIBUTES=service.namespace=lingologger-backend,deployment.environment=production,service.instance.id=ubuntu-4gb-nbg1-2,service.version=0.1
+ENV OTEL_SERVICE_NAME=discordbot
+ENV OTEL_RESOURCE_ATTRIBUTES=service.namespace=backend,deployment.environment=production,service.instance.id=ubuntu-4gb-nbg1-2,service.version=0.1.0
 # Set the entrypoint for the container
 ENTRYPOINT ["/otel-dotnet-auto/instrument.sh", "dotnet", "discord.bot.dll"]
