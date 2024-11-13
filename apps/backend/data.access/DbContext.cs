@@ -9,6 +9,7 @@ namespace LingoLogger.Data.Access
         public DbSet<Log> Logs { get; set; }
         public DbSet<Goal> Goals { get; set; }
         public DbSet<TogglIntegration> TogglIntegrations { get; set; }
+        public DbSet<Milestone> Milestones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -112,10 +113,29 @@ namespace LingoLogger.Data.Access
                       .IsRequired()
                       .HasColumnType("timestamptz")
                       .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
-                e.Property(e => e.DeletedAt)
-                    .IsRequired(false)
-                      .HasColumnType("timestamptz");
-                e.Property(e => e.DeletedAt).HasColumnType("timestamptz");
+                e.Property(e => e.DeletedAt).IsRequired(false).HasColumnType("timestamptz");
+            });
+
+            modelBuilder.Entity<Milestone>(e =>
+            {
+                e.ToTable("milestones");
+                e.HasQueryFilter(e => e.DeletedAt == null);
+                e.HasKey(e => e.Id);
+                e.Property(e => e.Title).HasMaxLength(255);
+                e.HasOne(e => e.User)
+                    .WithMany(u => u.Milestones)
+                    .HasForeignKey(e => e.UserId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.Property(e => e.CreatedAt)
+                      .IsRequired()
+                      .HasColumnType("timestamptz")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+                e.Property(e => e.ReachedAt).IsRequired(false).HasColumnType("timestamptz");
+                e.Property(e => e.DeletedAt).IsRequired(false).HasColumnType("timestamptz");
+
+                e.HasIndex(e => e.UserId);
             });
         }
     }

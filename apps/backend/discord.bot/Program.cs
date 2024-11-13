@@ -83,6 +83,7 @@ public class Program
                 .AddTransient<ProfileService>()
                 .AddTransient<GoalService>()
                 .AddTransient<TogglIntegrationHandler>()
+                .AddTransient<MilestonesInteractionHandler>()
                 .AddSingleton(x =>
                 {
                     var client = x.GetRequiredService<DiscordSocketClient>();
