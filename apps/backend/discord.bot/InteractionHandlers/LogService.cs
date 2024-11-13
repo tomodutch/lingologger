@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Text;
+using CsvHelper;
 using Discord;
 using LingoLogger.Data.Access;
 using LingoLogger.Data.Models;
@@ -17,7 +19,8 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
     {
         var validationResult = logReadParamsValidator.Validate(param);
 
-        if (!validationResult.IsValid) {
+        if (!validationResult.IsValid)
+        {
             await interaction.RespondAsync(embed: new EmbedBuilder()
                 .WithThumbnailUrl(interaction.User.GetAvatarUrl())
                 .WithTitle("Invalid input")
@@ -197,37 +200,49 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
 
     public async Task GetLogsAsync(IDiscordInteraction interaction)
     {
-        await interaction.DeferAsync();
+        await interaction.DeferAsync(ephemeral: true);
         try
         {
+            var today = DateTimeOffset.UtcNow;
             var userId = interaction.User.Id;
             var logs = await dbContext.Logs
                 .Where(l => l.User.DiscordId == userId)
+                .Where(l => l.CreatedAt.Date >= today.AddDays(-7).Date)
                 .OrderByDescending(l => l.CreatedAt)
-                .Take(25)
+                .Select(l => new
+                {
+                    Date = l.CreatedAt.ToString("yyyy-MM-dd"),
+                    Type = l.LogType,
+                    AmountOfSeconds = l.AmountOfSeconds,
+                    Title = l.Title,
+                    Origin = l.Source
+                })
                 .ToListAsync();
 
             var embedBuilder = new EmbedBuilder();
-            if (logs == null || logs.Any() == false)
+            if (logs == null || logs.Count == 0)
             {
                 embedBuilder = embedBuilder
                     .WithTitle("Logs")
                     .WithColor(Color.Orange)
                     .WithDescription("No logs found for user");
+                await interaction.FollowupAsync("/logs", embed: embedBuilder.Build());
             }
             else
             {
-                embedBuilder = embedBuilder.WithTitle("Logs").WithColor(Color.Blue);
-                var sb = new StringBuilder();
-                foreach (var log in logs)
-                {
-                    var time = timeParser.SecondsToTimeFormat(log.AmountOfSeconds);
-                    sb.Append($"- **{log.CreatedAt.ToString("yyyy-MM-dd")}**: {time} {log.Title}  \n");
-                }
+                using var memoryStream = new MemoryStream();
+                using var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8, leaveOpen: true);
+                using var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture);
+                csvWriter.WriteRecords(logs);
+                streamWriter.Flush();
 
-                embedBuilder.WithDescription(sb.ToString());
+                // Reset stream position to the beginning
+                memoryStream.Position = 0;
+
+                var attachment = new FileAttachment(memoryStream, "logs.csv");
+                // Embed can not be on top of a file attachment so just use text which is on top
+                await interaction.FollowupWithFileAsync(attachment, "Here are your logs for the passed 7 days:");
             }
-            await interaction.FollowupAsync("/logs", embed: embedBuilder.Build());
         }
         catch (Exception ex)
         {
