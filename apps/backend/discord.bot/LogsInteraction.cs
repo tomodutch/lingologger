@@ -1,7 +1,4 @@
-using System.Text;
-using Discord;
 using Discord.Interactions;
-using LingoLogger.Data.Models.Stores;
 using LingoLogger.Discord.Bot.InteractionHandlers;
 using Microsoft.Extensions.Logging;
 

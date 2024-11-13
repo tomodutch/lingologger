@@ -201,11 +201,11 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         try
         {
             var userId = interaction.User.Id;
-            // var logs = await logStore.GetLogsAsync(userId);
-            var logs = dbContext.Logs
+            var logs = await dbContext.Logs
                 .Where(l => l.User.DiscordId == userId)
                 .OrderByDescending(l => l.CreatedAt)
-                .Take(25);
+                .Take(25)
+                .ToListAsync();
 
             var embedBuilder = new EmbedBuilder();
             if (logs == null || logs.Any() == false)
@@ -222,7 +222,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 foreach (var log in logs)
                 {
                     var time = timeParser.SecondsToTimeFormat(log.AmountOfSeconds);
-                    sb.Append($"- {log.CreatedAt}: {time} {log.Medium} {log.Title}  \n");
+                    sb.Append($"- **{log.CreatedAt.ToString("yyyy-MM-dd")}**: {time} {log.Title}  \n");
                 }
 
                 embedBuilder.WithDescription(sb.ToString());
