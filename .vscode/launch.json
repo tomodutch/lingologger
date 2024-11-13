@@ -15,7 +15,7 @@
       "name": ".NET Web API",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/apps/backend/web.api/bin/Debug/net8.0/web.api.dll",
+      "program": "${workspaceFolder}/apps/backend/web.api/bin/Debug/net9.0/web.api.dll",
       "args": [],
       "cwd": "${workspaceFolder}/apps/backend/web.api",
       "preLaunchTask": "build:webapi",
@@ -36,7 +36,7 @@
       "type": "coreclr",
       "preLaunchTask": "build:bot",
       "request": "launch",
-      "program": "${workspaceFolder}/apps/backend/discord.bot/bin/Debug/net8.0/discord.bot.dll",
+      "program": "${workspaceFolder}/apps/backend/discord.bot/bin/Debug/net9.0/discord.bot.dll",
       "args": [],
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"

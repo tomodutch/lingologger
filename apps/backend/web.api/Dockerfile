@@ -1,5 +1,5 @@
 # Use the official .NET SDK as the base image for building the app
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy the project file and restore dependencies
@@ -11,7 +11,7 @@ RUN dotnet restore ./apps/backend/web.api/web.api.csproj
 RUN dotnet publish /src/apps/backend/web.api -c Release -o /app/out 
 
 # Use the runtime-only image for the final stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 ARG OTEL_VERSION=1.4.0
 ADD https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/download/v${OTEL_VERSION}/otel-dotnet-auto-install.sh otel-dotnet-auto-install.sh
 RUN apt-get update && apt-get install -y curl unzip && \
