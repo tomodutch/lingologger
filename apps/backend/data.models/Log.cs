@@ -1,9 +1,9 @@
 ﻿namespace LingoLogger.Data.Models;
 
-public abstract class Log
+public class Log
 {
     public required string Title { get; set; }
-    public string LogType { get; set; }
+    public LogType LogType { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
@@ -13,23 +13,5 @@ public abstract class Log
     public double Coefficient { get; set; }
     public required string Source { get; set; }
     public string? SourceEventId { get; set; }
-}
-
-public class ReadableLog : Log
-{
     public int? CharactersRead { get; set; }
-}
-
-public class AudibleLog : Log
-{
-}
-
-public class WatchableLog : Log
-{
-}
-
-public class EpisodicLog : Log
-{
-    public int Episodes { get; set; }
-    public int EpisodeLengthInSeconds { get; set; }
 }

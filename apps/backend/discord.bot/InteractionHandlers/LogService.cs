@@ -15,7 +15,7 @@ namespace LingoLogger.Discord.Bot.InteractionHandlers;
 
 public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbContext, LogReadParametersValidator logReadParamsValidator, UserService userService, TimeParser timeParser)
 {
-    public async Task LogReadAsync(IDiscordInteraction interaction, LogReadParameters param)
+    public async Task LogAsync(IDiscordInteraction interaction, LogParameters param)
     {
         var validationResult = logReadParamsValidator.Validate(param);
 
@@ -35,11 +35,12 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         using var transaction = await dbContext.Database.BeginTransactionAsync();
         try
         {
-            logger.LogInformation($"Incoming readable {DateTimeOffset.UtcNow}");
+            logger.LogInformation($"Incoming log {DateTimeOffset.UtcNow}");
             var seconds = timeParser.ParseTimeToSeconds(param.Time);
             var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
-            var dbLog = new ReadableLog()
+            var dbLog = new Log()
             {
+                LogType = param.LogType,
                 Title = param.Title,
                 Medium = param.Medium,
                 AmountOfSeconds = seconds,
@@ -62,102 +63,6 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         {
             logger.LogError($"Failed logging readable: {ex.Message}", ex);
             await transaction.RollbackAsync();
-            await interaction.FollowupAsync("An error occurred while logging. Try again later");
-        }
-    }
-
-
-    public async Task LogAudibleAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes, string? createdAtString = null)
-    {
-        using var transaction = await dbContext.Database.BeginTransactionAsync();
-        await interaction.DeferAsync();
-        try
-        {
-            var seconds = timeParser.ParseTimeToSeconds(time);
-            var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
-            var dbLog = new AudibleLog()
-            {
-                Title = title,
-                Medium = medium,
-                AmountOfSeconds = seconds,
-                Source = "Discord",
-            };
-            SetCreatedAtIfBacklog(createdAtString, dbLog);
-            user.Logs.Add(dbLog);
-            await dbContext.SaveChangesAsync();
-            await transaction.CommitAsync();
-            var description = "Listening logged";
-            await interaction.FollowupAsync(embed: BuildCreatedLogEmbed(interaction, description));
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            logger.LogError($"Failed logging audible: {ex.Message}", ex);
-            await interaction.FollowupAsync("An error occurred while logging. Try again later");
-        }
-    }
-
-    public async Task LogWatchableAsync(IDiscordInteraction interaction, string medium, string time, string title, string? notes, string? createdAtString = null)
-    {
-        using var transaction = await dbContext.Database.BeginTransactionAsync();
-        await interaction.DeferAsync();
-        try
-        {
-            var seconds = timeParser.ParseTimeToSeconds(time);
-            var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
-            var dbLog = new WatchableLog()
-            {
-                Title = title,
-                Medium = medium,
-                AmountOfSeconds = seconds,
-                Source = "Discord",
-            };
-            SetCreatedAtIfBacklog(createdAtString, dbLog);
-            user.Logs.Add(dbLog);
-            await dbContext.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            var description = "Watchable logged";
-            await interaction.FollowupAsync(embed: BuildCreatedLogEmbed(interaction, description));
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            logger.LogError($"Failed logging watchable: {ex.Message}", ex);
-            await interaction.FollowupAsync("An error occurred while logging. Try again later");
-        }
-    }
-
-    public async Task LogEpisodicAsync(IDiscordInteraction interaction, string medium, int amountOfEpisodes, string episodeLength, string title, string? notes, string? createdAtString = null)
-    {
-        using var transaction = await dbContext.Database.BeginTransactionAsync();
-        await interaction.DeferAsync();
-        try
-        {
-            var episodeLengthInSeconds = timeParser.ParseTimeToSeconds(episodeLength);
-            var seconds = amountOfEpisodes * episodeLengthInSeconds;
-            var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
-            var dbLog = new EpisodicLog()
-            {
-                Title = title,
-                Medium = medium,
-                AmountOfSeconds = seconds,
-                EpisodeLengthInSeconds = episodeLengthInSeconds,
-                Episodes = amountOfEpisodes,
-                Source = "Discord",
-            };
-            SetCreatedAtIfBacklog(createdAtString, dbLog);
-            user.Logs.Add(dbLog);
-            await dbContext.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            var description = "Watchable logged";
-            await interaction.FollowupAsync(embed: BuildCreatedLogEmbed(interaction, description));
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            logger.LogError($"Failed logging episodic: {ex.Message}", ex);
             await interaction.FollowupAsync("An error occurred while logging. Try again later");
         }
     }

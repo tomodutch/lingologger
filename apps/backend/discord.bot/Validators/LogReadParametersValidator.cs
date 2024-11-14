@@ -4,7 +4,7 @@ using LingoLogger.Web.Models;
 
 namespace LingoLogger.Discord.Bot.Validators;
 
-public class LogReadParametersValidator : AbstractValidator<LogReadParameters>
+public class LogReadParametersValidator : AbstractValidator<LogParameters>
 {
     public LogReadParametersValidator()
     {
@@ -25,7 +25,7 @@ public class LogReadParametersValidator : AbstractValidator<LogReadParameters>
         }).WithMessage("Time must be written like the following examples and be greater than 0: (i.e \"2h25m\" \"1h\" \"50m\")");
         RuleFor(x => x.Characters)
             .GreaterThan(0)
-            .When(x => x.Characters.HasValue)
+            .When(x => x.Characters.HasValue && x.LogType == Data.Models.LogType.Readable)
             .WithMessage("Characters must be greater than 0 if specified");
         RuleFor(x => x.Date).Must(createdAtString =>
         {

@@ -1,5 +1,6 @@
 ﻿using LingoLogger.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LingoLogger.Data.Access
 {
@@ -14,18 +15,18 @@ namespace LingoLogger.Data.Access
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            var logTypeConverter = new ValueConverter<LogType, string>(
+                v => LogTypeConverter.ConvertLogTypeToString(v),
+                v => LogTypeConverter.ConvertStringToLogType(v)
+            );
+
             modelBuilder.Entity<Log>(log =>
             {
-                log.HasDiscriminator<string>("LogType")
-                    .HasValue<ReadableLog>("Readable")
-                    .HasValue<AudibleLog>("Audible")
-                    .HasValue<WatchableLog>("Watchable")
-                    .HasValue<EpisodicLog>("Episodic");
-
                 log.HasQueryFilter(log => log.DeletedAt == null);
                 log.HasKey(l => new { l.UserId, l.CreatedAt });
                 log.HasIndex(l => l.UserId);
                 log.Property(l => l.UserId).IsRequired();
+                log.Property(l => l.LogType).IsRequired().HasConversion(logTypeConverter);
                 log.Property(l => l.Title).IsRequired().HasMaxLength(100);
                 log.Property(l => l.Medium).IsRequired().HasMaxLength(100);
                 log.Property(l => l.Source).IsRequired().HasMaxLength(100);

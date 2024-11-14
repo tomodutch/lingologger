@@ -43,11 +43,10 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
             {
                 var t = log.Key switch
                 {
-                    "Audible" => "Listened",
-                    "Readable" => "Read",
-                    "Watchable" => "Watched",
-                    "Episodic" => "Episodes",
-                    _ => log.Key
+                    LogType.Audible => "Listened",
+                    LogType.Readable => "Read",
+                    LogType.Watchable => "Watched",
+                    _ => "Unknown"
                 };
 
                 embedBuilder.AddField(t, $"{log.Value} minutes");

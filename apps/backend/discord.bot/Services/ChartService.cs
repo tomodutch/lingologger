@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Discord;
 using LingoLogger.Data.Access;
+using LingoLogger.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -54,7 +55,7 @@ public class ChartService(ILogger<ChartService> logger, HttpClient httpClient, L
                     }
                 }
 
-                data[logType] = logTypeData;
+                data[LogTypeConverter.ConvertLogTypeToString(logType)] = logTypeData;
             }
 
             var content = new BarChartRequest()

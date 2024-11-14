@@ -67,6 +67,11 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                 var payload = TryDeserializePayload<TimeEntryPayload>(payloadProperty.Value);
                 if (payload != null && payload.Stop.HasValue)
                 {
+                    if (!TryGetLogType(payload.Tags, out var logType))
+                    {
+                        return Ok(new ApiResponse(success: false, message: "Tags could not be mapped to a logtype", data: new { }));
+                    }
+
                     var duration = (payload.Stop - payload.Start).Value.TotalSeconds;
                     var log = await dbContext.Logs
                         .Where(l => l.UserId == integration.UserId)
@@ -75,18 +80,19 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                         .FirstOrDefaultAsync(token);
                     if (log != null)
                     {
-                        // TODO: Handle change log types
                         log.Title = payload.Description;
+                        log.LogType = logType;
                         log.CreatedAt = payload.Stop.Value;
                         log.AmountOfSeconds = (int)duration;
                         logger.LogInformation($"Integration {integrationId} updated log");
                     }
-                    else if (payload.Tags.Contains("listening", StringComparer.OrdinalIgnoreCase))
+                    else
                     {
-                        log = new AudibleLog()
+                        var newLog = new Log()
                         {
                             Title = payload.Description,
                             UserId = integration.User.Id,
+                            LogType = logType,
                             User = integration.User,
                             Medium = "Unknown",
                             CreatedAt = payload.Stop.Value,
@@ -94,39 +100,8 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                             Source = "Toggl",
                             SourceEventId = payload.Id.ToString()
                         };
-                        await dbContext.Logs.AddAsync(log, token);
-                        logger.LogInformation($"Integration {integrationId} added log");
-                    }
-                    else if (payload.Tags.Contains("watching", StringComparer.OrdinalIgnoreCase))
-                    {
-                        log = new WatchableLog()
-                        {
-                            Title = payload.Description,
-                            UserId = integration.User.Id,
-                            User = integration.User,
-                            Medium = "Unknown",
-                            CreatedAt = payload.Stop.Value,
-                            AmountOfSeconds = (int)duration,
-                            Source = "Toggl",
-                            SourceEventId = payload.Id.ToString()
-                        };
-                        await dbContext.Logs.AddAsync(log, token);
-                        logger.LogInformation($"Integration {integrationId} added log");
-                    }
-                    else if (payload.Tags.Contains("reading", StringComparer.OrdinalIgnoreCase))
-                    {
-                        log = new ReadableLog()
-                        {
-                            Title = payload.Description,
-                            UserId = integration.User.Id,
-                            User = integration.User,
-                            Medium = "Unknown",
-                            CreatedAt = payload.Stop.Value,
-                            AmountOfSeconds = (int)duration,
-                            Source = "Toggl",
-                            SourceEventId = payload.Id.ToString()
-                        };
-                        await dbContext.Logs.AddAsync(log, token);
+
+                        await dbContext.Logs.AddAsync(newLog, token);
                         logger.LogInformation($"Integration {integrationId} added log");
                     }
 
@@ -139,6 +114,7 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
         }
         catch (Exception ex)
         {
+            logger.LogError("An error occurred while processing the webhook", ex);
             await transaction.RollbackAsync(token);
             var problemDetails = new ProblemDetails()
             {
@@ -209,6 +185,27 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
             logger.LogError(ex, "Error during validation request to {Url}", validationCodeUrl);
             return false;
         }
+    }
+
+    private bool TryGetLogType(List<string> tags, out LogType logType)
+    {
+        logType = default;
+        var mapping = new Dictionary<string, LogType>()
+        {
+            ["reading"] = LogType.Readable,
+            ["listening"] = LogType.Audible,
+            ["watching"] = LogType.Watchable
+        };
+        foreach (var tag in tags)
+        {
+            if (mapping.TryGetValue(tag, out var foundLogType))
+            {
+                logType = foundLogType;
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

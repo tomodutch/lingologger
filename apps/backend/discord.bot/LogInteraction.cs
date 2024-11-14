@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Discord.Interactions;
+using LingoLogger.Data.Models;
 using LingoLogger.Discord.Bot.InteractionHandlers;
 using LingoLogger.Discord.Bot.InteractionParameters;
 using Microsoft.Extensions.Logging;
@@ -38,8 +39,9 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("characters", "Total number of characters read.")] int? characters = null,
         [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
-        var param = new LogReadParameters()
+        var param = new LogParameters()
         {
+            LogType = LogType.Readable,
             Medium = medium,
             Title = title,
             Time = time,
@@ -47,30 +49,7 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
             Notes = notes,
             Date = createdAt
         };
-        await _service.LogReadAsync(Context.Interaction, param);
-    }
-
-    [SlashCommand("episodes", "Log a watching activity.")]
-    public async Task LogEpisodes(
-        [Choice("Anime", "anime")]
-        [Choice("Drama", "drama")]
-        [Choice("Other", "other")]
-        [Summary("media", "Type of medium being watched (e.g., Anime, drama).")] string medium,
-        [Summary("title", "Title of the video or show.")] string title,
-        [Summary("episodes", "Number of episodes watched.")] int episodes,
-        [Summary("episode_length", "Length of each episode")] string episodeLength,
-        [Summary("notes", "Additional notes about the reading.")] string? notes,
-        [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
-
-    {
-        await _service.LogEpisodicAsync(
-            Context.Interaction,
-            medium,
-            episodes,
-            episodeLength,
-            title,
-            notes,
-            createdAt);
+        await _service.LogAsync(Context.Interaction, param);
     }
 
     // Subcommand for logging watching
@@ -86,13 +65,16 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("notes", "Additional notes about the reading.")] string? notes,
         [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
-        await _service.LogWatchableAsync(
-            Context.Interaction,
-            medium,
-            time,
-            title,
-            notes,
-            createdAt);
+        var param = new LogParameters()
+        {
+            LogType = LogType.Watchable,
+            Medium = medium,
+            Title = title,
+            Time = time,
+            Notes = notes,
+            Date = createdAt
+        };
+        await _service.LogAsync(Context.Interaction, param);
     }
 
     // Subcommand for logging listening
@@ -107,12 +89,15 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         [Summary("notes", "Additional notes about the reading.")] string? notes,
         [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
     {
-        await _service.LogAudibleAsync(
-            Context.Interaction,
-            medium,
-            time,
-            title,
-            notes,
-            createdAt);
+        var param = new LogParameters()
+        {
+            LogType = LogType.Audible,
+            Medium = medium,
+            Title = title,
+            Time = time,
+            Notes = notes,
+            Date = createdAt
+        };
+        await _service.LogAsync(Context.Interaction, param);
     }
 }
