@@ -7,6 +7,7 @@ public class LogTypeConverter
         LogType.Readable => "Readable",
         LogType.Audible => "Audible",
         LogType.Watchable => "Watchable",
+        LogType.Anki => "Anki",
         _ => throw new ArgumentOutOfRangeException(nameof(logType), logType, null)
     };
 
@@ -15,6 +16,7 @@ public class LogTypeConverter
         "Readable" => LogType.Readable,
         "Audible" => LogType.Audible,
         "Watchable" => LogType.Watchable,
+        "Anki" => LogType.Anki,
         _ => throw new ArgumentOutOfRangeException(nameof(logTypeString), logTypeString, "Invalid log type")
     };
 }

@@ -4,5 +4,6 @@ public enum LogType
 {
     Readable,
     Audible,
-    Watchable
+    Watchable,
+    Anki
 }

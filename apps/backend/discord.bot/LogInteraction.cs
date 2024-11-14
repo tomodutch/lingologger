@@ -100,4 +100,21 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         };
         await _service.LogAsync(Context.Interaction, param);
     }
+    [SlashCommand("anki", "Log time spend in anki")]
+    public async Task LogAnki(
+        [Summary("time", "Time spent listening.")] string time,
+        [Summary("notes", "Additional notes about the reading.")] string? notes,
+        [Summary("date", "Created a log in the past format is \"yesterday\" or YYYY-MM-DD (i.e: 2024-02-14)")] string? createdAt = null)
+    {
+        var param = new LogParameters()
+        {
+            LogType = LogType.Anki,
+            Medium = "Anki",
+            Title = "Anki",
+            Time = time,
+            Notes = notes,
+            Date = createdAt
+        };
+        await _service.LogAsync(Context.Interaction, param);
+    }
 }

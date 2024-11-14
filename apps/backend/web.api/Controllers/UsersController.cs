@@ -194,7 +194,8 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
         {
             ["reading"] = LogType.Readable,
             ["listening"] = LogType.Audible,
-            ["watching"] = LogType.Watchable
+            ["watching"] = LogType.Watchable,
+            ["anki"] = LogType.Anki,
         };
         foreach (var tag in tags)
         {

@@ -46,6 +46,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                     LogType.Audible => "Listened",
                     LogType.Readable => "Read",
                     LogType.Watchable => "Watched",
+                    LogType.Anki => "Anki",
                     _ => "Unknown"
                 };
 

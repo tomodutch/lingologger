@@ -31,29 +31,37 @@ app = Flask(__name__)
 def generate_barchart():
     # Parse JSON data from request
     data = request.json.get("data")
+    secondary_data = request.json.get("secondaryData")
     title = request.json.get("title", "Bar Chart")
     index = request.json.get("index")
     x_axis_title = request.json.get("xAxisTitle")
     y_axis_title = request.json.get("yAxisTitle")
     columns = list(data.keys())
+    secondary_colums = list(secondary_data.keys())
 
-    # Define a color-blind-friendly palette with increased contrast
+    # Split columns into two groups: stacked and individual
+    stacked_columns = columns  # First two as stacked
+    individual_columns = secondary_colums  # Remaining as individual bars
+
+    # Define colors and hatches
     colors = ["#E69F00", "#56B4E9", "#009E73", "#F0E442"]
-    # *+-./OX\ox|
-    hatch_patterns = ['x', '+', '|', 'O']  # Different hatch patterns for each category
+    hatch_patterns = ['x', '+', '|', 'O']
 
-    # Create a DataFrame
-    df = pd.DataFrame(data, index)
-    # Plot with a Seaborn barplot
-    # ax = sns.barplot(data=df, ci=None, edgecolor=None)
-    ax = df.plot(kind="bar", stacked=True, figsize=(10, 6), color=colors, edgecolor=None, alpha=1.0)
+    # Create DataFrame for both stacked and individual bars
+    df_stacked = pd.DataFrame({col: data[col] for col in stacked_columns}, index=index)
+    df_individual = pd.DataFrame({col: secondary_data[col] for col in individual_columns}, index=index)
 
-    # Create custom legend handles with hatches
+    # Plot stacked bars
+    ax = df_stacked.plot(kind="bar", stacked=True, figsize=(10, 6), color=colors[:len(stacked_columns)], edgecolor=None, position=0, width=0.4)
+
+    if len(secondary_colums) > 0:
+        # Plot individual bars next to the stacked bars
+        df_individual.plot(kind="bar", stacked=False, ax=ax, color=colors[len(stacked_columns):], edgecolor=None, position=1, width=0.4)
+
+    # Set legend with custom handles
     legend_handles = [
-        mpatches.Patch(
-            facecolor=colors[i], hatch=hatch_patterns[i % len(hatch_patterns)],
-            edgecolor="white", label=columns[i], linewidth=1
-        ) for i in range(len(columns))
+        mpatches.Patch(facecolor=colors[i], hatch=hatch_patterns[i % len(hatch_patterns)], edgecolor="white", label=columns[i], linewidth=1)
+        for i in range(len(columns))
     ]
     ax.legend(handles=legend_handles, title="Categories", frameon=False, labelcolor='lightgray', loc='upper left', bbox_to_anchor=(1, 1))
 
@@ -61,33 +69,17 @@ def generate_barchart():
     ax.set_title(title, fontsize=16, fontweight='bold', color='lightgray')
     ax.set_xlabel(x_axis_title, fontsize=12, fontweight='bold', color='lightgray')
     ax.set_ylabel(y_axis_title, fontsize=12, fontweight='bold', color='lightgray')
-    
-    # Customize the tick labels
+
+    # Customize tick labels
     ax.tick_params(axis="x", rotation=45, labelsize=10, labelcolor='#B9BBBE')
     ax.tick_params(axis="y", labelsize=10, labelcolor='#B9BBBE')
-    # Remove bar borders (set linewidth=0)
-    for p in ax.patches:
-        p.set_edgecolor('white')
-        p.set_linewidth(0)  # Remove the border's width
-        # p.set_hatch("x")
 
-    for i, bar in enumerate(ax.containers):
+    # Set hatches on stacked bars only
+    for i, bar in enumerate(ax.containers[:len(stacked_columns)]):
         for patch in bar:
             patch.set_hatch(hatch_patterns[i % len(hatch_patterns)])
-    # Add value labels above bars for extra clarity
-    # for p in ax.patches:
-    #     ax.annotate(f'{p.get_height():,.0f}', 
-    #                 (p.get_x() + p.get_width() / 2., p.get_height()), 
-    #                 ha='center', va='center', 
-    #                 fontsize=11, color='white', 
-    #                 xytext=(0, 9), textcoords='offset points')
-        
-    # Plot the bar chart
-    # plt.figure(figsize=(10, 6))
-    # df.plot(kind="bar")
-    # plt.title(title)
-    # plt.xlabel("Categories")
-    # plt.ylabel("Values")
+
+    # Adjust layout and save to buffer
     plt.tight_layout()
     buffer = io.BytesIO()
     plt.savefig(buffer, format='png')
@@ -98,6 +90,7 @@ def generate_barchart():
     response = send_file(buffer, mimetype='image/png', as_attachment=False, download_name="barchart.png")
 
     return response
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
