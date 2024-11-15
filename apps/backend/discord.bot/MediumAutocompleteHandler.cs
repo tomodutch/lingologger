@@ -53,6 +53,7 @@ public abstract class MediumAutocompleteHandler(ILogger<MediumAutocompleteHandle
         {
             var media = await DbContext.Media
                 .Where(m => m.LogType == Filter || m.LogType == LogType.Other)
+                .OrderBy(m => m.Name)
                 .Select(m => new AutocompleteResult(m.Name, m.Name))
                 .ToListAsync();
 
