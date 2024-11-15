@@ -5,5 +5,6 @@ public enum LogType
     Readable,
     Audible,
     Watchable,
-    Anki
+    Anki,
+    Other
 }

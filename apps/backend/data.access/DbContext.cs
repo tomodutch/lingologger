@@ -9,6 +9,7 @@ namespace LingoLogger.Data.Access
         public DbSet<User> Users { get; set; }
         public DbSet<Log> Logs { get; set; }
         public DbSet<Goal> Goals { get; set; }
+        public DbSet<Medium> Media { get; set; }
         public DbSet<TogglIntegration> TogglIntegrations { get; set; }
         public DbSet<Milestone> Milestones { get; set; }
 
@@ -28,7 +29,7 @@ namespace LingoLogger.Data.Access
                 log.Property(l => l.UserId).IsRequired();
                 log.Property(l => l.LogType).IsRequired().HasConversion(logTypeConverter);
                 log.Property(l => l.Title).IsRequired().HasMaxLength(100);
-                log.Property(l => l.Medium).IsRequired().HasMaxLength(100);
+                log.Property(l => l.MediumId).IsRequired(false);
                 log.Property(l => l.Source).IsRequired().HasMaxLength(100);
                 log.Property(l => l.AmountOfSeconds).IsRequired().HasMaxLength(60 * 60 * 24);
                 log.Property(l => l.Coefficient).IsRequired().HasMaxLength(60 * 60 * 24);
@@ -46,8 +47,84 @@ namespace LingoLogger.Data.Access
                     .IsRequired()
                     .OnDelete(DeleteBehavior.Cascade);
 
+                log.HasOne(l => l.Medium)
+                    .WithMany(m => m.Logs)
+                    .HasForeignKey(l => l.MediumId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+
                 log.HasIndex(l => new { l.UserId, l.SourceEventId });
+                log.HasIndex(l => new { l.UserId, l.MediumId });
+                log.HasIndex(l => l.MediumId);
             });
+            modelBuilder.Entity<Medium>(medium =>
+            {
+                medium.ToTable("Media");
+                medium.HasKey(m => m.Id);
+                medium.HasQueryFilter(user => user.DeletedAt == null);
+                medium.Property(m => m.LogType).IsRequired().HasConversion(logTypeConverter);
+                medium.Property(m => m.Name).IsRequired().HasMaxLength(25);
+                medium.Property(m => m.GuildId).IsRequired(false);
+                medium.HasMany(m => m.Logs)
+                      .WithOne(l => l.Medium)
+                      .HasForeignKey(l => l.MediumId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                medium.Property(l => l.CreatedAt)
+                      .IsRequired()
+                      .HasColumnType("timestamptz")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+                medium.Property(l => l.DeletedAt).IsRequired(false).HasColumnType("timestamptz");
+            });
+            modelBuilder.Entity<Medium>().HasData(
+                new Medium
+                {
+                    Id = Guid.Parse("c732a6f7-ccc6-44ad-88aa-e1da57e16c4a"),
+                    Name = "Book",
+                    LogType = LogType.Readable,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("46906a9f-1062-45fc-b5cd-8b30fa97062a"),
+                    Name = "Visual Novel",
+                    LogType = LogType.Readable,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("8b51cd17-c2f0-4b4b-99ee-63c99924d107"),
+                    Name = "Podcast",
+                    LogType = LogType.Audible,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("e11ca2ad-9903-4926-a21e-6640fac79089"),
+                    Name = "Audiobook",
+                    LogType = LogType.Audible,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("676fb136-e379-4c6a-ad6a-b4aaad2e413e"),
+                    Name = "Anime",
+                    LogType = LogType.Watchable,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("21daae4a-3dfc-4f8b-b525-0a513376de1a"),
+                    Name = "Youtube",
+                    LogType = LogType.Watchable,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("bb2adabb-1271-468f-af03-b8457e3e6488"),
+                    Name = "Anki",
+                    LogType = LogType.Anki,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("4bce7a21-3b1d-4ffd-a7eb-ea50724bf629"),
+                    Name = "Other",
+                    LogType = LogType.Other,
+                }
+            );
 
             // Configure User entity
             modelBuilder.Entity<User>(user =>

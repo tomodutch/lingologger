@@ -36,13 +36,28 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         try
         {
             logger.LogInformation($"Incoming log {DateTimeOffset.UtcNow}");
+
+            var medium = await dbContext.Media.FirstOrDefaultAsync(
+                m => m.LogType == param.LogType &&
+                EF.Functions.ILike(m.Name, param.Medium));
+            if (medium == null)
+            {
+                await interaction.FollowupAsync(embed: new EmbedBuilder()
+                .WithThumbnailUrl(interaction.User.GetAvatarUrl())
+                .WithTitle("Invalid input")
+                .WithDescription("Could not create log")
+                .WithCurrentTimestamp()
+                .Build());
+                return;
+            }
+
             var seconds = timeParser.ParseTimeToSeconds(param.Time);
             var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new Log()
             {
                 LogType = param.LogType,
                 Title = param.Title,
-                Medium = param.Medium,
+                Medium = medium,
                 AmountOfSeconds = seconds,
                 Source = "Discord",
             };

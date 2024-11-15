@@ -28,11 +28,7 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
     // Subcommand for logging reading
     [SlashCommand("read", "Log a reading activity.")]
     public async Task LogReading(
-        [Summary("medium", "Type of media read.")]
-        [Choice("Book", "book")]
-        [Choice("Visual Novel", "vn")]
-        [Choice("News", "news")]
-        [Choice("Other", "other")] string medium,
+        [Summary("medium", "Type of media read."), Autocomplete(typeof(ReadingMediumAutocompleteHandler))] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
         [Summary("title", "Title of the book or material read."), Autocomplete(typeof(BookAutocompleteHandler))] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes = null,
@@ -55,11 +51,7 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
     // Subcommand for logging watching
     [SlashCommand("watched", "Log a watching activity.")]
     public async Task LogWatching(
-        [Choice("Youtube", "youtube")]
-        [Choice("Anime", "anime")]
-        [Choice("Drama", "drama")]
-        [Choice("Other", "other")]
-        [Summary("media", "Type of medium being watched (e.g., YouTube, anime, drama, other).")] string medium,
+        [Summary("medium", "Type of media listened to."), Autocomplete(typeof(WatchableMediumAutocompleteHandler))] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
         [Summary("title", "Title of the video or show.")] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes,
@@ -80,10 +72,7 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
     // Subcommand for logging listening
     [SlashCommand("listened", "Log a listening activity.")]
     public async Task LogListening(
-        [Choice("Audiobook", "audiobook")]
-        [Choice("Podcast", "podcast")]
-        [Choice("Other", "other")]
-        [Summary("media", "Type of media being listened to.")] string medium,
+        [Summary("medium", "Type of media listened to."), Autocomplete(typeof(AudibleMediumAutocompleteHandler))] string medium,
         [Summary("time", "Time spent listening.")] string time,
         [Summary("title", "Title of the audio.")] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes,

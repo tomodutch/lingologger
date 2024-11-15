@@ -8,7 +8,8 @@ public class Log
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
     public DateTimeOffset? DeletedAt { get; set; }
-    public required string Medium { get; set; }
+    public Guid MediumId {get; set;}
+    public Medium Medium { get; set; }
     public int AmountOfSeconds { get; set; }
     public double Coefficient { get; set; }
     public required string Source { get; set; }
