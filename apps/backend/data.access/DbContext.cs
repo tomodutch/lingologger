@@ -29,7 +29,7 @@ namespace LingoLogger.Data.Access
                 log.Property(l => l.UserId).IsRequired();
                 log.Property(l => l.LogType).IsRequired().HasConversion(logTypeConverter);
                 log.Property(l => l.Title).IsRequired().HasMaxLength(100);
-                log.Property(l => l.MediumId).IsRequired(false);
+                log.Property(l => l.MediumId).IsRequired();
                 log.Property(l => l.Source).IsRequired().HasMaxLength(100);
                 log.Property(l => l.AmountOfSeconds).IsRequired().HasMaxLength(60 * 60 * 24);
                 log.Property(l => l.Coefficient).IsRequired().HasMaxLength(60 * 60 * 24);
