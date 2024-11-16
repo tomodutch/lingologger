@@ -8,6 +8,7 @@ public class LogTypeConverter
         LogType.Audible => "Audible",
         LogType.Watchable => "Watchable",
         LogType.Anki => "Anki",
+        LogType.Writing => "Writing",
         LogType.Other => "Other",
         _ => "Other"
     };
@@ -18,6 +19,7 @@ public class LogTypeConverter
         "Audible" => LogType.Audible,
         "Watchable" => LogType.Watchable,
         "Anki" => LogType.Anki,
+        "Writing" => LogType.Writing,
         "Other" => LogType.Other,
         _ => LogType.Other
     };

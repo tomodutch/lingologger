@@ -38,8 +38,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             logger.LogInformation($"Incoming log {DateTimeOffset.UtcNow}");
 
             var medium = await dbContext.Media.FirstOrDefaultAsync(
-                m => m.LogType == param.LogType &&
-                EF.Functions.ILike(m.Name, param.Medium));
+                m => m.LogType == param.LogType && EF.Functions.ILike(m.Name, param.Medium));
             if (medium == null)
             {
                 await interaction.FollowupAsync(embed: new EmbedBuilder()

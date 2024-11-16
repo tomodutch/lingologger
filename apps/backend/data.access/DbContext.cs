@@ -123,6 +123,12 @@ namespace LingoLogger.Data.Access
                     Id = Guid.Parse("4bce7a21-3b1d-4ffd-a7eb-ea50724bf629"),
                     Name = "Other",
                     LogType = LogType.Other,
+                },
+                new Medium
+                {
+                    Id = Guid.Parse("ca56bf69-0f46-44a5-a052-cd878ebdf757"),
+                    Name = "Other",
+                    LogType = LogType.Writing,
                 }
             );
 
