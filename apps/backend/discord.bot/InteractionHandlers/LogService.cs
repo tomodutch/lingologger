@@ -123,18 +123,22 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         await interaction.DeferAsync(ephemeral: true);
         try
         {
+            var maxLogs = 25;
             var today = DateTimeOffset.UtcNow;
             var userId = interaction.User.Id;
             var logs = await dbContext.Logs
                 .Where(l => l.User.DiscordId == userId)
                 .Where(l => l.CreatedAt.Date >= today.AddDays(-7).Date)
+                .Include(l => l.Medium)
                 .OrderByDescending(l => l.CreatedAt)
+                .Take(maxLogs + 1)
                 .Select(l => new
                 {
                     Date = l.CreatedAt.ToString("yyyy-MM-dd"),
                     Type = l.LogType,
                     AmountOfSeconds = l.AmountOfSeconds,
                     Title = l.Title,
+                    Medium = l.Medium.Name,
                     Origin = l.Source
                 })
                 .ToListAsync();
@@ -150,18 +154,24 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             }
             else
             {
-                using var memoryStream = new MemoryStream();
-                using var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8, leaveOpen: true);
-                using var csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture);
-                csvWriter.WriteRecords(logs);
-                streamWriter.Flush();
+                using var stringWriter = new StringWriter();
+                using var csvWriter = new CsvWriter(stringWriter, CultureInfo.InvariantCulture);
+                csvWriter.WriteRecords(logs.Take(maxLogs));
+                var descriptionBuilder = new StringBuilder($"```{stringWriter}```");
+                if (logs.Count > 25)
+                {
+                    descriptionBuilder = descriptionBuilder.AppendLine($"Showing the {maxLogs} most recent logs from the past 7 days…");
+                }
+                else
+                {
+                    descriptionBuilder = descriptionBuilder.AppendLine($"Showing all {logs.Count} logs created in the passed 7 days");
+                }
 
-                // Reset stream position to the beginning
-                memoryStream.Position = 0;
-
-                var attachment = new FileAttachment(memoryStream, "logs.csv");
-                // Embed can not be on top of a file attachment so just use text which is on top
-                await interaction.FollowupWithFileAsync(attachment, "Here are your logs for the passed 7 days:");
+                await interaction.FollowupAsync(embed: new EmbedBuilder()
+                .WithCurrentTimestamp()
+                .WithTitle($"{interaction.User.GlobalName}'s logs")
+                .WithDescription(descriptionBuilder.ToString())
+                .Build());
             }
         }
         catch (Exception ex)
