@@ -27,7 +27,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 .Select(g => new
                 {
                     logType = g.Key,
-                    TotalMinutes = Math.Round(g.Sum(l => l.AmountOfSeconds) / 60.0)
+                    TotalMinutes = Math.Round(g.Sum(l => l.AmountOfSeconds) / 60.0),
                 })
                 .ToDictionaryAsync(x => x.logType, x => x.TotalMinutes);
 
@@ -36,21 +36,26 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 .WithColor(Color.Blue)
                 .WithThumbnailUrl(interaction.User.GetAvatarUrl())
                 .WithTitle($"{interaction.User.GlobalName}'s profile")
-                .WithDescription("Stats for the passed 7 days")
                 .WithImageUrl("attachment://loading-chart.png")
                 .WithCurrentTimestamp();
-            foreach (var log in logs)
+            if (logs.Count > 0)
             {
-                var t = log.Key switch
+                embedBuilder = embedBuilder.WithDescription("Stats for the past 7 days");
+                var totalMinutes = logs.Values.Sum();
+                embedBuilder.AddField("Total", $"{totalMinutes:0.##} minutes");
+                foreach (var log in logs)
                 {
-                    LogType.Audible => "Listened",
-                    LogType.Readable => "Read",
-                    LogType.Watchable => "Watched",
-                    LogType.Anki => "Anki",
-                    _ => "Unknown"
-                };
+                    var t = log.Key switch
+                    {
+                        LogType.Audible => "Listened",
+                        LogType.Readable => "Read",
+                        LogType.Watchable => "Watched",
+                        LogType.Anki => "Anki",
+                        _ => "Unknown"
+                    };
 
-                embedBuilder.AddField(t, $"{log.Value} minutes");
+                    embedBuilder.AddField(t, $"{log.Value} minutes", inline: true);
+                }
             }
 
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Images", "loading-chart.png");
@@ -63,7 +68,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 {
                     e.Embed = embedBuilder.WithImageUrl("attachment://chart.png").Build();
                     e.Attachments = new[] {
-                    new FileAttachment(chartStream, "chart.png")
+                        new FileAttachment(chartStream, "chart.png")
                     };
                 });
             }
@@ -76,7 +81,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 {
                     e.Embed = embedBuilder.WithImageUrl("attachment://loading-chart-error.png").Build();
                     e.Attachments = new[] {
-                    new FileAttachment(errorFileStream, "loading-chart-error.png")
+                        new FileAttachment(errorFileStream, "loading-chart-error.png")
                     };
                 });
             }
