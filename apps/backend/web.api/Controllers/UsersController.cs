@@ -67,11 +67,7 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                 var payload = TryDeserializePayload<TimeEntryPayload>(payloadProperty.Value);
                 if (payload != null && payload.Stop.HasValue)
                 {
-                    if (!TryGetLogType(payload.Tags, out var logType))
-                    {
-                        return Ok(new ApiResponse(success: false, message: "Tags could not be mapped to a logtype", data: new { }));
-                    }
-
+                    var logType = GetLogType(payload.Tags);
                     var duration = (payload.Stop - payload.Start).Value.TotalSeconds;
                     var log = await dbContext.Logs
                         .Where(l => l.UserId == integration.UserId)
@@ -186,27 +182,23 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
         }
     }
 
-    private bool TryGetLogType(List<string> tags, out LogType logType)
+    private LogType GetLogType(List<string> tags)
     {
-        logType = default;
         var mapping = new Dictionary<string, LogType>()
         {
             ["reading"] = LogType.Readable,
             ["listening"] = LogType.Audible,
             ["watching"] = LogType.Watchable,
-            ["anki"] = LogType.Anki,
-            ["writing"] = LogType.Writing,
         };
         foreach (var tag in tags)
         {
             if (mapping.TryGetValue(tag, out var foundLogType))
             {
-                logType = foundLogType;
-                return true;
+                return foundLogType;
             }
         }
 
-        return false;
+        return LogType.Other;
     }
 }
 

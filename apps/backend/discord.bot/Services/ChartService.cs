@@ -56,14 +56,7 @@ public class ChartService(ILogger<ChartService> logger, HttpClient httpClient, L
                     }
                 }
 
-                if (logType == LogType.Anki)
-                {
-                    secondaryData[LogTypeConverter.ConvertLogTypeToString(logType)] = logTypeData;
-                }
-                else
-                {
-                    data[LogTypeConverter.ConvertLogTypeToString(logType)] = logTypeData;
-                }
+                data[LogTypeConverter.ConvertLogTypeToString(logType)] = logTypeData;
             }
 
             var content = new BarChartRequest()
