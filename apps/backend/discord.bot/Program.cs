@@ -81,6 +81,7 @@ public class Program
                 .AddTransient<LogService>()
                 .AddTransient<UserService>()
                 .AddTransient<GoogleBookApiService>()
+                .AddTransient<AniListQuery>()
                 .AddTransient<ProfileService>()
                 .AddTransient<GoalService>()
                 .AddTransient<TogglIntegrationHandler>()

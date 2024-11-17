@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LingoLogger.Discord.Bot.InteractionHandlers;
 
-public class TitleAutocompleteHandler(ILogger<TitleAutocompleteHandler> logger, GoogleBookApiService bookService) : AutocompleteHandler
+public class TitleAutocompleteHandler(ILogger<TitleAutocompleteHandler> logger, GoogleBookApiService bookService, AniListQuery aniListService) : AutocompleteHandler
 {
     public override async Task<AutocompletionResult> GenerateSuggestionsAsync(IInteractionContext context, IAutocompleteInteraction autocompleteInteraction, IParameterInfo parameter, IServiceProvider services)
     {
@@ -19,7 +19,18 @@ public class TitleAutocompleteHandler(ILogger<TitleAutocompleteHandler> logger, 
                 return AutocompletionResult.FromSuccess([]);
             }
 
-            if (query.StartsWith("book.", StringComparison.InvariantCultureIgnoreCase))
+            if (query.StartsWith("anime.", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var animeQuery = query["anime.".Length..];
+                var aniListResponse = await aniListService.SearchAnimeOrManga(animeQuery);
+                if (aniListResponse != null && aniListResponse?.Data?.Media?.Title?.Native != null)
+                {
+                    var suggestion = new AutocompleteResult(aniListResponse.Data.Media.Title.Native, "anime." + aniListResponse.Data.Media.Title.Native);
+                    return AutocompletionResult.FromSuccess([suggestion]);
+                }
+
+            }
+            else if (query.StartsWith("book.", StringComparison.InvariantCultureIgnoreCase))
             {
                 var bookQuery = query["book.".Length..];
                 var suggestions = await bookService.GetBookSuggestionsAsync(query: bookQuery);
@@ -36,7 +47,7 @@ public class TitleAutocompleteHandler(ILogger<TitleAutocompleteHandler> logger, 
                     })
                     .ToList();
 
-                return AutocompletionResult.FromSuccess(result.Select(r => new AutocompleteResult(r, r)));
+                return AutocompletionResult.FromSuccess(result.Select(r => new AutocompleteResult(r, "book." + r)));
             }
 
             return AutocompletionResult.FromSuccess([]);
