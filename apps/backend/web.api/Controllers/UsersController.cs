@@ -88,13 +88,11 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                     }
                     else
                     {
-                        var medium = await dbContext.Media.FirstOrDefaultAsync(m => EF.Functions.ILike(m.Name, "other"), token);
                         var newLog = new Log()
                         {
                             Title = payload.Description,
                             UserId = integration.User.Id,
                             LogType = logType,
-                            Medium = medium,
                             User = integration.User,
                             CreatedAt = payload.Stop.Value,
                             AmountOfSeconds = (int)duration,

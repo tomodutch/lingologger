@@ -36,27 +36,12 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         try
         {
             logger.LogInformation($"Incoming log {DateTimeOffset.UtcNow}");
-
-            var medium = await dbContext.Media.FirstOrDefaultAsync(
-                m => m.LogType == param.LogType && EF.Functions.ILike(m.Name, param.Medium));
-            if (medium == null)
-            {
-                await interaction.FollowupAsync(embed: new EmbedBuilder()
-                .WithThumbnailUrl(interaction.User.GetAvatarUrl())
-                .WithTitle("Invalid input")
-                .WithDescription("Could not create log")
-                .WithCurrentTimestamp()
-                .Build());
-                return;
-            }
-
             var seconds = timeParser.ParseTimeToSeconds(param.Time);
             var user = await userService.GetOrCreateUserAsync(interaction.User.Id);
             var dbLog = new Log()
             {
                 LogType = param.LogType,
                 Title = param.Title,
-                Medium = medium,
                 AmountOfSeconds = seconds,
                 Source = "Discord",
             };
@@ -128,7 +113,6 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
             var logs = await dbContext.Logs
                 .Where(l => l.User.DiscordId == userId)
                 .Where(l => l.CreatedAt.Date >= today.AddDays(-7).Date)
-                .Include(l => l.Medium)
                 .OrderByDescending(l => l.CreatedAt)
                 .Take(maxLogs + 1)
                 .Select(l => new
@@ -137,7 +121,6 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                     Type = l.LogType,
                     AmountOfSeconds = l.AmountOfSeconds,
                     Title = l.Title,
-                    Medium = l.Medium.Name,
                     Origin = l.Source
                 })
                 .ToListAsync();

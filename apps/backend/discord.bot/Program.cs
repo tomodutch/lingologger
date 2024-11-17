@@ -77,7 +77,6 @@ public class Program
         });
         services.AddSingleton<DiscordSocketClient>()
                 .AddTransient<SocketInteractionContext>()
-                .AddTransient<ReadingMediumAutocompleteHandler>()
                 .AddTransient<TimeParser>()
                 .AddTransient<LogService>()
                 .AddTransient<UserService>()

@@ -9,7 +9,6 @@ public class LogReadParametersValidator : AbstractValidator<LogParameters>
     public LogReadParametersValidator()
     {
         var timeParser = new TimeParser();
-        RuleFor(x => x.Medium).NotEmpty().WithMessage("Medium is required");
         RuleFor(x => x.Time).NotEmpty().WithMessage("Time is required");
         RuleFor(x => x.Time).Must((time) =>
         {

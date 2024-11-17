@@ -4,7 +4,6 @@ namespace LingoLogger.Discord.Bot.InteractionParameters;
 
 public class LogParameters
 {
-    public required string Medium { get; set; }
     public required string Time { get; set; }
     public required string Title { get; set; }
     public required LogType LogType { get; set; }

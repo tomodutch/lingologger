@@ -28,7 +28,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
     // Subcommand for logging reading
     [SlashCommand("read", "Log a reading activity.")]
     public async Task LogReading(
-        [Summary("medium", "Type of media read."), Autocomplete(typeof(ReadingMediumAutocompleteHandler))] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
         [Summary("title", "Title of the book or material read."), Autocomplete(typeof(BookAutocompleteHandler))] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes = null,
@@ -38,7 +37,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         var param = new LogParameters()
         {
             LogType = LogType.Readable,
-            Medium = medium,
             Title = title,
             Time = time,
             Characters = characters,
@@ -51,7 +49,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
     // Subcommand for logging watching
     [SlashCommand("watched", "Log a watching activity.")]
     public async Task LogWatching(
-        [Summary("medium", "Type of media listened to."), Autocomplete(typeof(WatchableMediumAutocompleteHandler))] string medium,
         [Summary("time", "Time spent watching in minutes.")] string time,
         [Summary("title", "Title of the video or show.")] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes,
@@ -60,7 +57,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         var param = new LogParameters()
         {
             LogType = LogType.Watchable,
-            Medium = medium,
             Title = title,
             Time = time,
             Notes = notes,
@@ -72,7 +68,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
     // Subcommand for logging listening
     [SlashCommand("listened", "Log a listening activity.")]
     public async Task LogListening(
-        [Summary("medium", "Type of media listened to."), Autocomplete(typeof(AudibleMediumAutocompleteHandler))] string medium,
         [Summary("time", "Time spent listening.")] string time,
         [Summary("title", "Title of the audio.")] string title,
         [Summary("notes", "Additional notes about the reading.")] string? notes,
@@ -81,7 +76,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         var param = new LogParameters()
         {
             LogType = LogType.Audible,
-            Medium = medium,
             Title = title,
             Time = time,
             Notes = notes,
@@ -99,7 +93,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         var param = new LogParameters()
         {
             LogType = LogType.Anki,
-            Medium = "Anki",
             Title = "Anki",
             Time = time,
             Notes = notes,
@@ -118,7 +111,6 @@ public class LogInteraction : InteractionModuleBase<SocketInteractionContext>
         var param = new LogParameters()
         {
             LogType = LogType.Writing,
-            Medium = "Other",
             Title = title,
             Time = time,
             Notes = notes,
