@@ -43,6 +43,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                 LogType = param.LogType,
                 Title = param.Title,
                 AmountOfSeconds = seconds,
+                Notes = param.Notes,
                 Source = "Discord",
             };
             SetCreatedAtIfBacklog(param.Date, dbLog);
@@ -121,6 +122,7 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
                     Type = l.LogType,
                     AmountOfSeconds = l.AmountOfSeconds,
                     Title = l.Title,
+                    Notes = l.Notes,
                     Origin = l.Source
                 })
                 .ToListAsync();

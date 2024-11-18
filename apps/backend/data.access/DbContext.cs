@@ -31,6 +31,7 @@ namespace LingoLogger.Data.Access
                 log.Property(l => l.Source).IsRequired().HasMaxLength(100);
                 log.Property(l => l.AmountOfSeconds).IsRequired().HasMaxLength(60 * 60 * 24);
                 log.Property(l => l.Coefficient).IsRequired().HasMaxLength(60 * 60 * 24);
+                log.Property(l => l.Notes).IsRequired(false).HasMaxLength(100);
                 log.Property(l => l.SourceEventId).HasMaxLength(100);
                 log.Property(l => l.CreatedAt)
                       .IsRequired()

@@ -11,6 +11,7 @@ public class Log
     public int AmountOfSeconds { get; set; }
     public double Coefficient { get; set; }
     public required string Source { get; set; }
+    public string? Notes {get;set;}
     public string? SourceEventId { get; set; }
     public int? CharactersRead { get; set; }
 }
