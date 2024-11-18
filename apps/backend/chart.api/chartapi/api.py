@@ -31,17 +31,14 @@ app = Flask(__name__)
 def generate_barchart():
     # Parse JSON data from request
     data = request.json.get("data")
-    secondary_data = request.json.get("secondaryData")
     title = request.json.get("title", "Bar Chart")
     index = request.json.get("index")
     x_axis_title = request.json.get("xAxisTitle")
     y_axis_title = request.json.get("yAxisTitle")
     columns = list(data.keys())
-    secondary_colums = list(secondary_data.keys())
 
     # Split columns into two groups: stacked and individual
     stacked_columns = columns  # First two as stacked
-    individual_columns = secondary_colums  # Remaining as individual bars
 
     # Define colors and hatches
     colors = ["#E69F00", "#56B4E9", "#009E73", "#F0E442"]
@@ -49,15 +46,9 @@ def generate_barchart():
 
     # Create DataFrame for both stacked and individual bars
     df_stacked = pd.DataFrame({col: data[col] for col in stacked_columns}, index=index)
-    df_individual = pd.DataFrame({col: secondary_data[col] for col in individual_columns}, index=index)
 
     # Plot stacked bars
     ax = df_stacked.plot(kind="bar", stacked=True, figsize=(10, 6), color=colors[:len(stacked_columns)], edgecolor=None, position=0, width=0.4)
-
-    if len(secondary_colums) > 0:
-        # Plot individual bars next to the stacked bars
-        df_individual.plot(kind="bar", stacked=False, ax=ax, color=colors[len(stacked_columns):], edgecolor=None, position=1, width=0.4)
-
     # Set legend with custom handles
     legend_handles = [
         mpatches.Patch(facecolor=colors[i], hatch=hatch_patterns[i % len(hatch_patterns)], edgecolor="white", label=columns[i], linewidth=1)

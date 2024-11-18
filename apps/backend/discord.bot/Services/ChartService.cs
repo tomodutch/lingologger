@@ -37,7 +37,6 @@ public class ChartService(ILogger<ChartService> logger, HttpClient httpClient, L
         {
             var distinctDates = logs.Select(l => l.Day).Distinct().OrderBy(d => d).ToList();
             var data = new Dictionary<string, List<double>>();
-            var secondaryData = new Dictionary<string, List<double>>();
             foreach (var logType in logs.Select(l => l.LogType).Distinct())
             {
                 var logTypeData = new List<double>();
@@ -64,7 +63,6 @@ public class ChartService(ILogger<ChartService> logger, HttpClient httpClient, L
                 Title = $"{interaction.User.GlobalName}'s logs",
                 Index = distinctDates.Select(d => d.ToString("MM-dd")).ToList(),
                 Data = data,
-                SecondaryData = secondaryData,
                 XAxisTitle = "",
                 YAxisTitle = "Minutes"
             };
@@ -88,8 +86,6 @@ public class BarChartRequest
 {
     [JsonPropertyName("data")]
     public required Dictionary<string, List<double>> Data { get; set; }
-    [JsonPropertyName("secondaryData")]
-    public required Dictionary<string, List<double>> SecondaryData { get; set; }
     [JsonPropertyName("index")]
     public required IEnumerable<string> Index { get; set; }
     [JsonPropertyName("title")]
