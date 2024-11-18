@@ -22,7 +22,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
             var userId = interaction.User.Id;
             var today = DateTimeOffset.UtcNow;
             var logs = await _dbContext.Logs.Where(l => l.User.DiscordId == interaction.User.Id)
-                .Where(l => l.CreatedAt.Date >= today.AddDays(-7).Date)
+                .Where(l => l.CreatedAt.Date >= today.AddDays(-31).Date)
                 .GroupBy(l => l.LogType)
                 .Select(g => new
                 {
@@ -40,7 +40,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 .WithCurrentTimestamp();
             if (logs.Count > 0)
             {
-                embedBuilder = embedBuilder.WithDescription("Stats for the past 7 days");
+                embedBuilder = embedBuilder.WithDescription("Stats for the past 31 days");
                 var totalMinutes = logs.Values.Sum();
                 embedBuilder.AddField("Total", $"{totalMinutes:0.##} minutes");
                 foreach (var log in logs)
