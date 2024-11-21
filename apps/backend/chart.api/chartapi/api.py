@@ -1,29 +1,6 @@
-# app.py
 from flask import Flask, request, send_file
-import matplotlib
-import pandas as pd
-import seaborn as sns
-import bar_chart_race as bcr
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import os
-import io
-
-matplotlib.use('Agg')  # Use Agg backend for non-GUI environments
-sns.set_theme(style="whitegrid", font_scale=1.2)
-plt.rcParams.update({
-    'axes.facecolor': '#36393F',  # Dark gray for the axes background
-    'figure.facecolor': '#36393F',  # Dark gray for the entire figure background
-    'axes.edgecolor': '#2F3136',  # Slightly lighter gray for the edges
-    'axes.labelcolor': 'lightgray',  # Light gray labels for contrast
-    'xtick.color': '#B9BBBE',  # Light gray tick color
-    'ytick.color': '#B9BBBE',  # Light gray tick color
-    'grid.color': '#4F545C',  # Dark gridlines to mimic subtle Discord accents
-    'text.color': 'lightgray',  # Light gray for any general text
-    'axes.titleweight': 'bold',  # Bolder title for emphasis,
-    'hatch.color':     'blue',
-    'hatch.linewidth': 0.3
-})
+import plotly.graph_objects as go
+from io import BytesIO
 
 app = Flask(__name__)
 
@@ -33,55 +10,65 @@ def generate_barchart():
     data = request.json.get("data")
     title = request.json.get("title", "Bar Chart")
     index = request.json.get("index")
-    x_axis_title = request.json.get("xAxisTitle")
-    y_axis_title = request.json.get("yAxisTitle")
+    x_axis_title = request.json.get("xAxisTitle", "X-Axis")
+    y_axis_title = request.json.get("yAxisTitle", "Y-Axis")
     columns = list(data.keys())
 
-    # Split columns into two groups: stacked and individual
-    stacked_columns = columns  # First two as stacked
+    # Prepare data for the stacked bar chart
+    fig = go.Figure()
 
     # Define colors and hatches
     colors = ["#E69F00", "#56B4E9", "#009E73", "#F0E442"]
-    hatch_patterns = ['x', '+', '|', 'O']
 
-    # Create DataFrame for both stacked and individual bars
-    df_stacked = pd.DataFrame({col: data[col] for col in stacked_columns}, index=index)
+    # Add each column as a separate trace
+    for i, column in enumerate(columns):
+        fig.add_trace(go.Bar(
+            name=column,
+            x=index,
+            y=data[column],
+            marker=dict(
+                color=colors[i % len(colors)],
+                pattern=dict(shape=['x', '+', '|', '/'][i % 4])
+            ),
+            opacity=0.8  # Adjust opacity for all traces
+        ))
 
-    # Plot stacked bars
-    ax = df_stacked.plot(kind="bar", stacked=True, figsize=(10, 6), color=colors[:len(stacked_columns)], edgecolor=None, position=0, width=0.4)
-    # Set legend with custom handles
-    legend_handles = [
-        mpatches.Patch(facecolor=colors[i], hatch=hatch_patterns[i % len(hatch_patterns)], edgecolor="white", label=columns[i], linewidth=1)
-        for i in range(len(columns))
-    ]
-    ax.legend(handles=legend_handles, title="Categories", frameon=False, labelcolor='lightgray', loc='upper left', bbox_to_anchor=(1, 1))
+    # Update layout for the stacked bar chart
+    fig.update_layout(
+        barmode='stack',
+        title=dict(text=title, font=dict(size=16, color='lightgray'), x=0.5),
+        xaxis=dict(
+            title=dict(text=x_axis_title, font=dict(size=12, color='lightgray')),
+            tickfont=dict(size=10, color='#B9BBBE'),
+            gridcolor='#4F545C',  # Dim the gridlines
+            gridwidth=0.5  # Make the gridlines thinner
+        ),
+        yaxis=dict(
+            title=dict(text=y_axis_title, font=dict(size=12, color='lightgray')),
+            tickfont=dict(size=10, color='#B9BBBE'),
+            gridcolor='#4F545C',  # Dim the gridlines
+            gridwidth=0.5  # Make the gridlines thinner
+        ),
+        legend=dict(
+            title=dict(text="Categories", font=dict(size=12, color='lightgray')),
+            font=dict(color='lightgray'),
+            bgcolor='rgba(54, 57, 63, 0.8)',
+            x=1, y=1
+        ),
+        plot_bgcolor='#36393F',
+        paper_bgcolor='#36393F',
+        margin=dict(t=50, b=40, l=40, r=150)  # Adjust layout to fit legend
+    )
 
-    # Set title and labels
-    ax.set_title(title, fontsize=16, fontweight='bold', color='lightgray')
-    ax.set_xlabel(x_axis_title, fontsize=12, fontweight='bold', color='lightgray')
-    ax.set_ylabel(y_axis_title, fontsize=12, fontweight='bold', color='lightgray')
-
-    # Customize tick labels
-    ax.tick_params(axis="x", rotation=45, labelsize=10, labelcolor='#B9BBBE')
-    ax.tick_params(axis="y", labelsize=10, labelcolor='#B9BBBE')
-
-    # Set hatches on stacked bars only
-    for i, bar in enumerate(ax.containers[:len(stacked_columns)]):
-        for patch in bar:
-            patch.set_hatch(hatch_patterns[i % len(hatch_patterns)])
-
-    # Adjust layout and save to buffer
-    plt.tight_layout()
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format='png')
+    # Write to a buffer
+    buffer = BytesIO()
+    fig.write_image(buffer, format='png')
     buffer.seek(0)
-    plt.close()
 
     # Send the generated bar chart image as response
     response = send_file(buffer, mimetype='image/png', as_attachment=False, download_name="barchart.png")
 
     return response
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
