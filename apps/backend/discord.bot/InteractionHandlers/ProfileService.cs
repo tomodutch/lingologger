@@ -27,9 +27,9 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                 .Select(g => new
                 {
                     logType = g.Key,
-                    TotalMinutes = Math.Round(g.Sum(l => l.AmountOfSeconds) / 60.0),
+                    TotalSeconds = g.Sum(l => l.AmountOfSeconds),
                 })
-                .ToDictionaryAsync(x => x.logType, x => x.TotalMinutes);
+                .ToDictionaryAsync(x => x.logType, x => x.TotalSeconds);
 
             var embedBuilder = new EmbedBuilder();
             embedBuilder = embedBuilder
@@ -41,8 +41,9 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
             if (logs.Count > 0)
             {
                 embedBuilder = embedBuilder.WithDescription("Stats for the past 31 days");
-                var totalMinutes = logs.Values.Sum();
-                embedBuilder.AddField("Total", $"{totalMinutes:0.##} minutes");
+                var totalSeconds = logs.Values.Sum();
+                var timeParser = new TimeParser();
+                embedBuilder.AddField("Total", timeParser.SecondsToTimeFormat(totalSeconds));
                 foreach (var log in logs)
                 {
                     var t = log.Key switch
@@ -53,7 +54,7 @@ public class ProfileService(ILogger<ProfileService> logger, LingoLoggerDbContext
                         _ => "Other"
                     };
 
-                    embedBuilder.AddField(t, $"{log.Value} minutes", inline: true);
+                    embedBuilder.AddField(t, timeParser.SecondsToTimeFormat(log.Value), inline: true);
                 }
             }
 
