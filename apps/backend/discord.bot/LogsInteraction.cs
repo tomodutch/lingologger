@@ -54,4 +54,10 @@ public class LogsInteraction : InteractionModuleBase<SocketInteractionContext>
         };
         await _service.LogAsync(Context.Interaction, param);
     }
+
+    [SlashCommand("export", "Export logs")]
+    public async Task Export()
+    {
+        await _service.ExportAsync(Context.Interaction);
+    }
 }

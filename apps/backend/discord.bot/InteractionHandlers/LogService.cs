@@ -165,6 +165,55 @@ public class LogService(ILogger<LogService> logger, LingoLoggerDbContext dbConte
         }
     }
 
+    public async Task ExportAsync(IDiscordInteraction interaction)
+    {
+        await interaction.DeferAsync();
+        try
+        {
+            var logs = await dbContext.Logs
+                .Where(l => l.User.DiscordId == interaction.User.Id)
+                .Where(l => l.LogType != LogType.Other)
+                .OrderByDescending(l => l.CreatedAt)
+                .GroupBy(l => new { l.CreatedAt.Date, l.LogType, l.Title })
+                .Select(group => new { group.Key, Seconds = group.Sum(l => l.AmountOfSeconds) })
+                .ToListAsync();
+
+            var embedBuilder = new EmbedBuilder().WithTitle("Export");
+            var stringBuilder = new StringBuilder();
+            var today = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd");
+            foreach (var logGroup in logs)
+            {
+                var key = logGroup.Key;
+                var seconds = logGroup.Seconds;
+                string medium = key.LogType switch
+                {
+                    LogType.Readable => "Readtime",
+                    LogType.Audible => "Listening",
+                    LogType.Watchable => "Watchtime",
+                    LogType.Other => "Other",
+                    _ => throw new NotImplementedException(),
+                };
+                var date = key.Date.ToString("yyyy-MM-dd");
+                if (date == today)
+                {
+                    stringBuilder.AppendLine($"/log medium:{medium} title:{key.Title} amount:{seconds}s");
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"/backlog date:{date} medium:{medium} title:{key.Title} amount:{seconds}s");
+                }
+            }
+
+            embedBuilder.WithDescription($"```{stringBuilder}```");
+            await interaction.FollowupAsync(embed: embedBuilder.Build());
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"An error occurred {ex.Message}", ex);
+            await interaction.FollowupAsync(embed: new EmbedBuilder().WithColor(Color.Orange).WithTitle("Error").Build());
+        }
+    }
+
     private static Embed BuildCreatedLogEmbed(IDiscordInteraction interaction, string description)
     {
         var embed = new EmbedBuilder()
