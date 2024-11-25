@@ -62,7 +62,8 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
             Index = distinctDates.Select(d => d.ToString("MM-dd")).ToList(),
             Data = data,
             XAxisTitle = "",
-            YAxisTitle = "Minutes"
+            YAxisTitle = "Minutes",
+            Theme = "White"
         };
 
         var jsonBody = System.Text.Json.JsonSerializer.Serialize(content);
@@ -285,4 +286,6 @@ public class BarChartRequest
     public required string XAxisTitle { get; set; }
     [JsonPropertyName("yAxisTitle")]
     public required string YAxisTitle { get; set; }
+    [JsonPropertyName("theme")]
+    public string Theme { get; internal set; }
 }
