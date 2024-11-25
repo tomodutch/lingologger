@@ -18,6 +18,12 @@ internal class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddControllers();
         builder.Services.AddHttpClient();
+        builder.Services.AddHttpClient("ChartApiClient", client =>
+        {
+            var uri = builder.Configuration.GetValue<string>("ChartApiUri");
+            client.BaseAddress = new Uri(uri);
+        });
+
         builder.Services.AddDbContext<LingoLogger.Data.Access.LingoLoggerDbContext>(options =>
         {
             options.UseNpgsql(builder.Configuration.GetConnectionString("DbConnection"));

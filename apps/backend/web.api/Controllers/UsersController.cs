@@ -1,4 +1,6 @@
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LingoLogger.Data.Access;
 using LingoLogger.Data.Models;
 using LingoLogger.Web.Models;
@@ -11,6 +13,67 @@ namespace LingoLogger.Web.Api.Controllers;
 [Route("api/users")]
 public class UsersController(ILogger<UsersController> logger, LingoLoggerDbContext dbContext, IHttpClientFactory httpClientFactory) : ControllerBase
 {
+    [HttpGet("{discordUserId}/stats")]
+    public async Task<IActionResult> GetStats(ulong discordUserId, CancellationToken token)
+    {
+        var minDate = DateTimeOffset.UtcNow.AddDays(-7).Date;
+        var logs = await dbContext.Logs
+            .Where(l => l.User.DiscordId == discordUserId)
+            .Where(l => l.CreatedAt.Date >= minDate)
+            .GroupBy(l => new
+            {
+                l.LogType,
+                Day = l.CreatedAt.Date
+            })
+            .Select(group => new
+            {
+                group.Key.LogType,
+                group.Key.Day,
+                TotalSeconds = group.Sum(l => l.AmountOfSeconds)
+            })
+            .ToListAsync(token);
+
+        var distinctDates = logs.Select(l => l.Day).Distinct().OrderBy(d => d).ToList();
+        var data = new Dictionary<string, List<double>>();
+        foreach (var logType in logs.Select(l => l.LogType).Distinct())
+        {
+            var logTypeData = new List<double>();
+            foreach (var date in distinctDates)
+            {
+                var logForDate = logs.FirstOrDefault(l => l.LogType == logType && l.Day == date);
+                var totalSeconds = logForDate?.TotalSeconds ?? 0;
+                if (totalSeconds > 0)
+                {
+                    var time = Math.Round(totalSeconds / 60.0, 2);
+                    logTypeData.Add(time);
+                }
+                else
+                {
+                    logTypeData.Add(logForDate?.TotalSeconds ?? 0);
+                }
+            }
+
+            data[LogTypeConverter.ConvertLogTypeToString(logType)] = logTypeData;
+        }
+        using var httpClient = httpClientFactory.CreateClient("ChartApiClient");
+        var content = new BarChartRequest()
+        {
+            Title = "logs",
+            Index = distinctDates.Select(d => d.ToString("MM-dd")).ToList(),
+            Data = data,
+            XAxisTitle = "",
+            YAxisTitle = "Minutes"
+        };
+
+        var jsonBody = System.Text.Json.JsonSerializer.Serialize(content);
+        var body = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("/generate_barchart", body, token);
+        response.EnsureSuccessStatusCode();
+        var imageStream = await response.Content.ReadAsStreamAsync();
+
+        return File(imageStream, "image/jpeg");
+    }
+
     [HttpPost("{userId}/toggl/{integrationId}")]
     public async Task<IActionResult> CreateTogglLog(string userId, string integrationId, [FromBody] JsonElement webhookJson, CancellationToken token)
     {
@@ -207,4 +270,19 @@ public class ApiResponse(bool success, string message, object? data = null)
     public bool Success { get; set; } = success;
     public string Message { get; set; } = message;
     public object? Data { get; set; } = data;
+}
+
+public class BarChartRequest
+{
+    [JsonPropertyName("data")]
+    public required Dictionary<string, List<double>> Data { get; set; }
+    [JsonPropertyName("index")]
+    public required IEnumerable<string> Index { get; set; }
+    [JsonPropertyName("title")]
+    public required string Title { get; set; }
+
+    [JsonPropertyName("xAxisTitle")]
+    public required string XAxisTitle { get; set; }
+    [JsonPropertyName("yAxisTitle")]
+    public required string YAxisTitle { get; set; }
 }

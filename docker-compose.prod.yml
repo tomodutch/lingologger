@@ -37,6 +37,7 @@ services:
       ConnectionStrings__DbConnection: "Host=db;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT}"
       ASPNETCORE_URLS: http://0.0.0.0:8080
+      ChartApiUri: http://chartapi:5000
     restart: always # Ensures the bot restarts on failure
     networks:
       - backend-network
