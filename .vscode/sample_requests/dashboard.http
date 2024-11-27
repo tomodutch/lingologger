@@ -1,0 +1,30 @@
+### Generate a dashboard as a PNG
+POST http://localhost:5000/generate_dashboard
+Content-Type: application/json
+
+{
+  "theme": "white",
+  "bar": {
+    "data": {
+        "Category A": [10, 20, 30, 40],
+        "Category B": [15, 25, 35, 45],
+        "Category C": [5, 10, 15, 20]
+    },
+    "index": ["Q1", "Q2", "Q3", "Q4"]
+  },
+  "burndowns": 
+  [
+    {
+        "date": ["2024-11-20", "2024-11-21", "2024-11-30"],
+        "remaining_work": [100, 80, 50]
+    },
+    {
+        "date": ["2024-11-20 9:00", "2024-11-20 12:00", "2024-11-20 18:00"],
+        "remaining_work": [100, 40, 0]
+    }
+  ],
+  "average_hours": 5.5
+}
+##########
+GET https://localhost:7294/api/users/429002040488755211/dashboard
+Content-Type: application/json

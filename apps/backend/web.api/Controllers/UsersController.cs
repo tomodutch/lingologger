@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Hangfire.Dashboard;
 using LingoLogger.Data.Access;
 using LingoLogger.Data.Models;
 using LingoLogger.Web.Models;
@@ -13,8 +14,81 @@ namespace LingoLogger.Web.Api.Controllers;
 [Route("api/users")]
 public class UsersController(ILogger<UsersController> logger, LingoLoggerDbContext dbContext, IHttpClientFactory httpClientFactory) : ControllerBase
 {
+    [HttpGet("{discordUserId}/dashboard")]
+    public async Task<IActionResult> GetDashboard(ulong discordUserId, CancellationToken token)
+    {
+        var goals = await dbContext.Goals.Where(g => g.User.DiscordId == discordUserId)
+            .Where(g => g.EndsAt > DateTimeOffset.UtcNow)
+            .ToListAsync(token);
+
+        var request = new DashboardRequest()
+        {
+            Theme = "white"
+        };
+
+        foreach (var goal in goals)
+        {
+            var logs = await dbContext.Logs
+                .Where(l => l.User.DiscordId == discordUserId)
+                .Where(l => l.CreatedAt >= goal.CreatedAt)
+                .Where(l => l.CreatedAt <= goal.EndsAt)
+                .GroupBy(l => l.CreatedAt.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    AmountOfSeconds = g.Sum(l => l.AmountOfSeconds)
+                })
+                .OrderBy(x => x.Date)
+                .ToDictionaryAsync(x => x.Date.ToString("yyyy-MM-dd"), x => x.AmountOfSeconds, token);
+            var dateRange = Enumerable.Range(0, (goal.EndsAt - goal.CreatedAt).Value.Days + 1)
+                                      .Select(offset => goal.CreatedAt.AddDays(offset).ToString("yyyy-MM-dd"))
+                                      .ToList();
+            var remainingWorks = new List<int>();
+            var totalWork = goal.TargetTimeInSeconds;
+            foreach (var day in dateRange)
+            {
+                if (logs.TryGetValue(day, out var value))
+                {
+                    totalWork -= value;
+                }
+
+                remainingWorks.Add(totalWork / 3600);
+            }
+
+            request.Burndowns.Add(new()
+            {
+                Date = dateRange,
+                RemainingWork = remainingWorks
+            });
+        }
+
+        request.Bar = await GenerateBarChartData(discordUserId, token);
+        using var httpClient = httpClientFactory.CreateClient("ChartApiClient");
+        var jsonBody = System.Text.Json.JsonSerializer.Serialize(request);
+        var body = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("/generate_dashboard", body, token);
+        response.EnsureSuccessStatusCode();
+        var imageStream = await response.Content.ReadAsStreamAsync(token);
+        return File(imageStream, "image/jpeg");
+    }
+
     [HttpGet("{discordUserId}/stats")]
     public async Task<IActionResult> GetStats(ulong discordUserId, CancellationToken token)
+    {
+        using var httpClient = httpClientFactory.CreateClient("ChartApiClient");
+
+        BarChartRequest content = await GenerateBarChartData(discordUserId, token);
+
+        var jsonBody = System.Text.Json.JsonSerializer.Serialize(content);
+        var body = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("/generate_barchart", body, token);
+        response.EnsureSuccessStatusCode();
+        var imageStream = await response.Content.ReadAsStreamAsync();
+
+        return File(imageStream, "image/jpeg");
+    }
+
+    private async Task<BarChartRequest> GenerateBarChartData(ulong discordUserId, CancellationToken token)
     {
         var minDate = DateTimeOffset.UtcNow.AddDays(-7).Date;
         var logs = await dbContext.Logs
@@ -55,7 +129,6 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
 
             data[LogTypeConverter.ConvertLogTypeToString(logType)] = logTypeData;
         }
-        using var httpClient = httpClientFactory.CreateClient("ChartApiClient");
         var content = new BarChartRequest()
         {
             Title = "logs",
@@ -65,14 +138,7 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
             YAxisTitle = "Minutes",
             Theme = "White"
         };
-
-        var jsonBody = System.Text.Json.JsonSerializer.Serialize(content);
-        var body = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync("/generate_barchart", body, token);
-        response.EnsureSuccessStatusCode();
-        var imageStream = await response.Content.ReadAsStreamAsync();
-
-        return File(imageStream, "image/jpeg");
+        return content;
     }
 
     [HttpPost("{userId}/toggl/{integrationId}")]
@@ -286,6 +352,27 @@ public class BarChartRequest
     public required string XAxisTitle { get; set; }
     [JsonPropertyName("yAxisTitle")]
     public required string YAxisTitle { get; set; }
+    [JsonPropertyName("theme")]
+    public string Theme { get; internal set; }
+}
+
+
+public class BurndownChartRequest
+{
+    [JsonPropertyName("remaining_work")]
+    public required List<int> RemainingWork { get; set; }
+    [JsonPropertyName("date")]
+    public required List<string> Date { get; set; }
+    [JsonPropertyName("theme")]
+    public string Theme { get; internal set; }
+}
+
+public class DashboardRequest
+{
+    [JsonPropertyName("bar")]
+    public BarChartRequest Bar { get; set; }
+    [JsonPropertyName("burndowns")]
+    public List<BurndownChartRequest> Burndowns { get; set; } = [];
     [JsonPropertyName("theme")]
     public string Theme { get; internal set; }
 }

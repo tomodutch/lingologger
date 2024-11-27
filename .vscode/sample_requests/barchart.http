@@ -1,0 +1,16 @@
+### Generate Bar Chart
+POST http://127.0.0.1:5000/generate_barchart
+Content-Type: application/json
+
+{
+  "data": {
+    "Category A": [10, 20, 30, 40],
+    "Category B": [15, 25, 35, 45],
+    "Category C": [5, 10, 15, 20]
+  },
+  "index": ["Q1", "Q2", "Q3", "Q4"],
+  "title": "Sales by Quarter",
+  "xAxisTitle": "Quarters",
+  "yAxisTitle": "Sales",
+  "theme": "white"
+}
