@@ -120,15 +120,11 @@ def generate_dashboard():
             row = i + 2
             # Calculate the expected work line
             start_work = df['remaining_work'].iloc[0]
-            end_work = df['remaining_work'].iloc[-1]
+            end_work = 0
             
             # For both date and time, calculate the total days or seconds for interpolation
-            if df['date'].dtype == 'datetime64[ns]':  # Handle date-based data
-                total_days = (df['date'].iloc[-1] - df['date'].iloc[0]).days
-                df['expected_work'] = start_work - (start_work - end_work) * (df['date'] - df['date'].iloc[0]).dt.days / total_days
-            else:  # Handle time-based data (same day)
-                total_seconds = (df['date'].iloc[-1] - df['date'].iloc[0]).total_seconds()
-                df['expected_work'] = start_work - (start_work - end_work) * (df['date'].apply(lambda x: (x.hour * 3600 + x.minute * 60 + x.second)) - df['date'].iloc[0].hour * 3600) / total_seconds
+            total_days = (df['date'].iloc[-1] - df['date'].iloc[0]).days
+            df['expected_work'] = start_work - (start_work - end_work) * (df['date'] - df['date'].iloc[0]).dt.days / total_days
             
             # Add Actual Work trace
             fig.add_trace(go.Scatter(
