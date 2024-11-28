@@ -57,6 +57,7 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
 
             request.Burndowns.Add(new()
             {
+                TargetTimeInHours = goal.TargetTimeInSeconds / 3600,
                 Date = dateRange,
                 RemainingWork = remainingWorks
             });
@@ -363,6 +364,8 @@ public class BurndownChartRequest
     public required List<int> RemainingWork { get; set; }
     [JsonPropertyName("date")]
     public required List<string> Date { get; set; }
+    [JsonPropertyName("target_time_in_hours")]
+    public required int TargetTimeInHours {get; set;}
     [JsonPropertyName("theme")]
     public string Theme { get; internal set; }
 }

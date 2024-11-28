@@ -16,11 +16,13 @@ Content-Type: application/json
   [
     {
         "date": ["2024-11-20", "2024-11-21", "2024-11-30"],
-        "remaining_work": [100, 80, 50]
+        "remaining_work": [100, 80, 50],
+        "target_time_in_hours": 100
     },
     {
         "date": ["2024-11-20 9:00", "2024-11-20 12:00", "2024-11-20 18:00"],
-        "remaining_work": [100, 40, 0]
+        "remaining_work": [100, 40, 0],
+        "target_time_in_hours": 100
     }
   ],
   "average_hours": 5.5

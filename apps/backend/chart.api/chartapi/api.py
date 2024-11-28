@@ -119,7 +119,7 @@ def generate_dashboard():
             
             row = i + 2
             # Calculate the expected work line
-            start_work = df['remaining_work'].iloc[0]
+            start_work = df['target_time_in_hours'].iloc[0]
             end_work = 0
             
             # For both date and time, calculate the total days or seconds for interpolation
