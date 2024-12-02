@@ -39,26 +39,36 @@ public class UsersController(ILogger<UsersController> logger, LingoLoggerDbConte
                     AmountOfSeconds = g.Sum(l => l.AmountOfSeconds)
                 })
                 .OrderBy(x => x.Date)
-                .ToDictionaryAsync(x => x.Date.ToString("yyyy-MM-dd"), x => x.AmountOfSeconds, token);
+                .ToDictionaryAsync(x => x.Date, x => x.AmountOfSeconds, token);
             var dateRange = Enumerable.Range(0, (goal.EndsAt - goal.CreatedAt).Value.Days + 1)
-                                      .Select(offset => goal.CreatedAt.AddDays(offset).ToString("yyyy-MM-dd"))
+                                      .Select(offset => goal.CreatedAt.AddDays(offset).Date)
                                       .ToList();
-            var remainingWorks = new List<int>();
+            var lastLogGroup = logs.LastOrDefault();
+            var remainingWorks = new List<int?>();
             var totalWork = goal.TargetTimeInSeconds;
             foreach (var day in dateRange)
             {
                 if (logs.TryGetValue(day, out var value))
                 {
                     totalWork -= value;
+                    remainingWorks.Add(totalWork / 3600);
                 }
-
-                remainingWorks.Add(totalWork / 3600);
+                // user didnt log anything on this day but has logs on coming days
+                else if (day < lastLogGroup.Key.Date)
+                {
+                    remainingWorks.Add(totalWork / 3600);
+                }
+                // end of data
+                else
+                {
+                    remainingWorks.Add(null);
+                }
             }
 
             request.Burndowns.Add(new()
             {
                 TargetTimeInHours = goal.TargetTimeInSeconds / 3600,
-                Date = dateRange,
+                Date = dateRange.Select(s => s.ToString("yyyy-MM-dd")).ToList(),
                 RemainingWork = remainingWorks
             });
         }
@@ -361,11 +371,11 @@ public class BarChartRequest
 public class BurndownChartRequest
 {
     [JsonPropertyName("remaining_work")]
-    public required List<int> RemainingWork { get; set; }
+    public required List<int?> RemainingWork { get; set; }
     [JsonPropertyName("date")]
     public required List<string> Date { get; set; }
     [JsonPropertyName("target_time_in_hours")]
-    public required int TargetTimeInHours {get; set;}
+    public required int TargetTimeInHours { get; set; }
     [JsonPropertyName("theme")]
     public string Theme { get; internal set; }
 }
